@@ -1,7 +1,5 @@
-const Mongoose = require("mongoose");
 const { User } = require("../models");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 
 const checkUserExists = async (email) => {
   const user = await User.findOne({ email });
