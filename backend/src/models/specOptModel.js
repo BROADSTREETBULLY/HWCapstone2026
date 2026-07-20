@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const SpecOptSchema = new Schema({
+const SpecOptionSchema = new Schema({
 
 
 
@@ -9,4 +9,4 @@ const SpecOptSchema = new Schema({
 
 
 
-module.exports = mongoose.model("SpecOpt", SpecOptSchema);
+module.exports = mongoose.model("SpecOption", SpecOptionSchema);

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const userSchema = new Schema(
+const UserSchema = new Schema(
   {
     username: { type: String, trim: true, required: true, unique: true },
     orgId: { type: Schema.Types.ObjectId, ref: "Organisation", required: true },
@@ -20,4 +20,4 @@ const userSchema = new Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", UserSchema);
