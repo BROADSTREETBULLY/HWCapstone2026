@@ -13,14 +13,14 @@ const registerUser = async (userBody) => {
     throw new Error("Invalid request body: missing user data");
   }
 
-  const { username, firstName, lastName, dob, email, password } = userBody;
+  const { username, firstName, lastName, orgId, email, password } = userBody;
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const userData = {
     username,
+    orgId,
     firstName,
     lastName,
-    dob,
     email,
     password: hashedPassword,
   };
