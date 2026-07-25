@@ -1,4 +1,5 @@
 const { SpecVersion, SpecOption } = require("../models");
+const { parseSpecText } = require("./specTextParser");
 
 const createVersionInDB = async (optionID, data, userId) => {
   const option = await SpecOption.findById(optionID);
@@ -16,7 +17,7 @@ const createVersionInDB = async (optionID, data, userId) => {
     rawText: data.rawText,
     imageKey: data.imageKey,
     internalComments: data.internalComments,
-    attributes: data.attributes || [],
+    attributes: data.attributes || parseSpecText(data.rawText),
     createdBy: userId,
   }).save();
 

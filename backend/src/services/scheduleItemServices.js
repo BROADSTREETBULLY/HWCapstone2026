@@ -6,6 +6,7 @@ const {
   SpecVersion,
 } = require("../models");
 
+const { parseSpecText } = require("./specTextParser");
 
 const createItemWithSpecInDB = async (scheduleID, data, userId) => {
   const schedule = await Schedule.findById(scheduleID);
@@ -33,7 +34,7 @@ const createItemWithSpecInDB = async (scheduleID, data, userId) => {
     rawText: data.rawText,
     imageKey: data.imageKey,
     internalComments: data.internalComments,
-    attributes: data.attributes || [],
+    attributes: data.attributes || parseSpecText(data.rawText),
     createdBy: userId,
   }).save();
 
