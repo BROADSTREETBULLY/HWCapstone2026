@@ -8,8 +8,9 @@ const port = 3000;
 let dbConnect = require("./services/dbConnect");
 
 const userRoutes = require("./routes/userRoutes");
+const specRoutes = require("./routes/specRoutes");
 
-
+app.use("/api/specs", specRoutes)
 app.use("/api/users", userRoutes);
 
 app.get("/", (req, res) => {
