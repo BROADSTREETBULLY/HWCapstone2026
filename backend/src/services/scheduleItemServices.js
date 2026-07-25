@@ -53,7 +53,6 @@ const createItemWithSpecInDB = async (scheduleID, data, userId) => {
   return { item, spec, option, version };
 };
 
-
 const getItemsForScheduleInDB = async (scheduleID) => {
   const items = await ScheduleItem.find({ scheduleID })
     .populate({
@@ -73,7 +72,6 @@ const getItemInDB = async (itemID) => {
   return item;
 };
 
-
 const updateItemInDB = async (itemID, data, userId) => {
   const allowed = {
     updatedBy: userId,
@@ -83,7 +81,7 @@ const updateItemInDB = async (itemID, data, userId) => {
   if (data.sortOrder !== undefined) allowed.sortOrder = data.sortOrder;
 
   const item = await ScheduleItem.findByIdAndUpdate(itemID, allowed, {
-    new: true,
+    returnDocument: "after",
   });
   if (!item) throw new Error("Schedule item not found");
   return item;

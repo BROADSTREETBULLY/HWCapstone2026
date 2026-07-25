@@ -84,7 +84,7 @@ async function updateOne(id, data) {
     const updatedSpec = await Spec.findByIdAndUpdate(
         id,
         { ...data, updatedAt: Date.now() },
-        { new: true }
+        { returnDocument: "after" }
     );
     if (!updatedSpec) throw new Error("Spec not found");
         return updatedSpec;

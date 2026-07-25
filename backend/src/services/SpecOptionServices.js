@@ -30,7 +30,7 @@ const updateOptionInDB = async (optionID, data) => {
   const allowed = {};
   if (data.isRedundant !== undefined) allowed.isRedundant = data.isRedundant;
   const option = await SpecOption.findByIdAndUpdate(optionID, allowed, {
-    new: true,
+    returnDocument: "after",
   });
   if (!option) throw new Error("Option not found");
   return option;

@@ -30,7 +30,7 @@ const updateScheduleInDB = async (scheduleID, data, userId) => {
   const schedule = await Schedule.findByIdAndUpdate(
     scheduleID,
     { ...data, updatedBy: userId },
-    { new: true },
+    { returnDocument: "after" },
   );
   if (!schedule) throw new Error("Schedule not found");
   return schedule;
