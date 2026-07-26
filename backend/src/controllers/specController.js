@@ -16,6 +16,7 @@ const {
   getVersionsForOptionInDB,
   getVersionInDB,
 } = require("../services/specVersionServices");
+const { pushToLibraryInDB } = require("../services/pushServices");
 
 
 
@@ -27,12 +28,13 @@ const createSpec = async (specBody, userId) => {
   return spec;
 };
 
-const querySpecLibrary = async (queryBody) => {
+const querySpecLibrary = async (queryBody, userId) => {
   const paginationModel = queryBody?.paginationModel || { page: 0, pageSize: 25 };
   const result = await getLibrary({
     paginationModel,
     filterModel: queryBody?.filterModel,
     sortModel: queryBody?.sortModel,
+    userId,
   });
   return result;
 };
@@ -77,6 +79,7 @@ const createVersion = async (optionID, versionBody, userId) => {
   if (!versionBody || typeof versionBody !== "object") {
     throw new Error("Invalid request body: missing version data");
   }
+  if (!versionBody?.rawText) throw new Error("Invalid request body: rawText is required");
   const version = await createVersionInDB(optionID, versionBody, userId);
   return version;
 };
@@ -90,6 +93,12 @@ const getVersion = async (versionID) => {
   const version = await getVersionInDB(versionID);
   return version;
 };
+
+const pushToLibrary = async (optionID, userId) => {
+  const result = await pushToLibraryInDB(optionID, userId);
+  return result;
+};
+
 
 
 module.exports = {
@@ -105,4 +114,5 @@ module.exports = {
   createVersion,
   getVersionsForOption,
   getVersion,
+  pushToLibrary,
 };

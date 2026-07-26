@@ -13,15 +13,20 @@ const SpecSchema = new Schema(
     scheduleID: {
       type: Schema.Types.ObjectId,
       ref: "Schedule",
-      required: function () { return this.ownerType === "schedule"; }, // null if library
+      required: function () {
+        return this.ownerType === "schedule";
+      }, // null if library
     },
     category: { type: String, trim: true },
     subCategory: { type: String, trim: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    libraryID: {
+      type: Schema.Types.ObjectId,
+      ref: "Library", 
+    },
   },
   { timestamps: true },
 );
-
 
 module.exports = mongoose.model("Spec", SpecSchema);
