@@ -6,13 +6,11 @@
   "author": "",
   "type": "commonjs",
   "main": "index.js",
-  
   "scripts": {
-  "test": "jest --runInBand",
+    "test": "jest --runInBand",
     "start": "node ./src/index.js",
     "dev": "nodemon ./src/index.js"
   },
-
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
