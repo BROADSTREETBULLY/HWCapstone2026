@@ -79,6 +79,7 @@ const createVersion = async (optionID, versionBody, userId) => {
   if (!versionBody || typeof versionBody !== "object") {
     throw new Error("Invalid request body: missing version data");
   }
+  if (!versionBody?.rawText) throw new Error("Invalid request body: rawText is required");
   const version = await createVersionInDB(optionID, versionBody, userId);
   return version;
 };
