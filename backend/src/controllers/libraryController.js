@@ -8,6 +8,7 @@ const {
   removeLibraryItemInDB,
 } = require("../services/libraryServices");
 
+
 const createLibrary = async (libraryBody, userId) => {
   if (!libraryBody?.name) {
     throw new Error("Invalid request body: name is required");
@@ -21,16 +22,16 @@ const getLibraries = async (userId) => {
   return libraries;
 };
 
-const updateLibrary = async (libraryID, libraryBody) => {
-  const library = await updateLibraryInDB(libraryID, libraryBody || {});
+const updateLibrary = async (libraryID, libraryBody, userId) => {
+  const library = await updateLibraryInDB(libraryID, libraryBody || {}, userId);
   return library;
 };
 
-const deleteLibrary = async (libraryID) => {
-  await deleteLibraryInDB(libraryID);
+const deleteLibrary = async (libraryID, userId) => {
+  await deleteLibraryInDB(libraryID, userId);
 };
 
-const addLibraryItem = async (libraryID, itemBody) => {
+const addLibraryItem = async (libraryID, itemBody, userId) => {
   if (!itemBody?.optionID) {
     throw new Error("Invalid request body: optionID is required");
   }
@@ -38,17 +39,18 @@ const addLibraryItem = async (libraryID, itemBody) => {
     libraryID,
     itemBody.optionID,
     itemBody.sortOrder,
+    userId,
   );
   return item;
 };
 
-const getLibraryItems = async (libraryID) => {
-  const items = await getLibraryItemsInDB(libraryID);
+const getLibraryItems = async (libraryID, userId) => {
+  const items = await getLibraryItemsInDB(libraryID, userId);
   return items;
 };
 
-const removeLibraryItem = async (libraryItemID) => {
-  await removeLibraryItemInDB(libraryItemID);
+const removeLibraryItem = async (libraryItemID, userId) => {
+  await removeLibraryItemInDB(libraryItemID, userId);
 };
 
 module.exports = {

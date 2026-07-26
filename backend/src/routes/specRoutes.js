@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const { authenticateToken } = require("../middleware/authMiddleware");
+const { validateObjectId } = require("../middleware/validateObjectId");
 
 const {
   createSpec,
@@ -16,17 +17,26 @@ const {
   createVersion,
   getVersionsForOption,
   getVersion,
+  pushToLibrary,
 } = require("../controllers/specController");
+
+
+const statusFor = (error) => {
+  if (error.status) return error.status;
+  if (error.message?.startsWith("Invalid request body")) return 400;
+  if (error.message?.includes("not found")) return 404;
+  return 500;
+};
 
 const protectedRouter = express.Router();
 protectedRouter.use(authenticateToken);
 
 protectedRouter.post("/query", async (req, res) => {
   try {
-    const result = await querySpecLibrary(req.body);
+    const result = await querySpecLibrary(req.body, req.user.userId);
     res.status(200).send(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -35,9 +45,7 @@ protectedRouter.post("/", async (req, res) => {
     const spec = await createSpec(req.body, req.user.userId);
     res.status(201).send(spec);
   } catch (error) {
-    const isBadRequest =
-      error.message && error.message.startsWith("Invalid request body");
-    res.status(isBadRequest ? 400 : 500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -46,9 +54,7 @@ protectedRouter.get("/options/:optionId", async (req, res) => {
     const option = await getOption(req.params.optionId);
     res.status(200).send(option);
   } catch (error) {
-    res
-      .status(error.message.includes("not found") ? 404 : 500)
-      .json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -57,9 +63,7 @@ protectedRouter.put("/options/:optionId", async (req, res) => {
     const option = await updateOption(req.params.optionId, req.body);
     res.status(200).send(option);
   } catch (error) {
-    res
-      .status(error.message.includes("not found") ? 404 : 500)
-      .json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -72,9 +76,7 @@ protectedRouter.post("/options/:optionId/versions", async (req, res) => {
     );
     res.status(201).send(version);
   } catch (error) {
-    const isBadRequest =
-      error.message && error.message.startsWith("Invalid request body");
-    res.status(isBadRequest ? 400 : 500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -83,7 +85,7 @@ protectedRouter.get("/options/:optionId/versions", async (req, res) => {
     const versions = await getVersionsForOption(req.params.optionId);
     res.status(200).send(versions);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -92,9 +94,7 @@ protectedRouter.get("/versions/:versionId", async (req, res) => {
     const version = await getVersion(req.params.versionId);
     res.status(200).send(version);
   } catch (error) {
-    res
-      .status(error.message.includes("not found") ? 404 : 500)
-      .json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -103,9 +103,7 @@ protectedRouter.get("/:id", async (req, res) => {
     const spec = await getSpec(req.params.id);
     res.status(200).send(spec);
   } catch (error) {
-    res
-      .status(error.message.includes("not found") ? 404 : 500)
-      .json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -114,9 +112,7 @@ protectedRouter.put("/:id", async (req, res) => {
     const spec = await updateSpec(req.params.id, req.body, req.user.userId);
     res.status(200).send(spec);
   } catch (error) {
-    res
-      .status(error.message.includes("not found") ? 404 : 500)
-      .json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -125,9 +121,7 @@ protectedRouter.delete("/:id", async (req, res) => {
     await deleteSpec(req.params.id);
     res.status(204).send();
   } catch (error) {
-    res
-      .status(error.message.includes("not found") ? 404 : 500)
-      .json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -136,9 +130,7 @@ protectedRouter.post("/:id/options", async (req, res) => {
     const option = await createOption(req.params.id, req.body, req.user.userId);
     res.status(201).send(option);
   } catch (error) {
-    res
-      .status(error.message.includes("not found") ? 404 : 500)
-      .json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -147,9 +139,22 @@ protectedRouter.get("/:id/options", async (req, res) => {
     const options = await getOptionsForSpec(req.params.id);
     res.status(200).send(options);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
+
+protectedRouter.post(
+  "/options/:optionId/push-to-library",
+  validateObjectId("optionId"),
+  async (req, res) => {
+    try {
+      const result = await pushToLibrary(req.params.optionId, req.user.userId);
+      res.status(201).send(result);
+    } catch (error) {
+      res.status(statusFor(error)).json({ error: error.message });
+    }
+  },
+);
 
 router.use("/", protectedRouter);
 

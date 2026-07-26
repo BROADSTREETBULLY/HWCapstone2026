@@ -12,6 +12,7 @@ const {
   updateItemInDB,
   deleteItemInDB,
 } = require("../services/scheduleItemServices");
+const { addFromLibraryInDB } = require("../services/pushServices");
 
 
 const createSchedule = async (scheduleBody, userId) => {
@@ -70,6 +71,19 @@ const deleteItem = async (itemID) => {
   await deleteItemInDB(itemID);
 };
 
+const addItemFromLibrary = async (scheduleID, itemBody, userId) => {
+  if (!itemBody?.optionID) {
+    throw new Error("Invalid request body: optionID is required");
+  }
+  const result = await addFromLibraryInDB(
+    scheduleID,
+    itemBody.optionID,
+    itemBody,
+    userId,
+  );
+  return result;
+};
+
 module.exports = {
   createSchedule,
   getSchedules,
@@ -81,4 +95,5 @@ module.exports = {
   getItem,
   updateItem,
   deleteItem,
+  addItemFromLibrary,
 };

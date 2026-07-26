@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const { authenticateToken } = require("../middleware/authMiddleware");
-
+const { validateObjectId } = require("../middleware/validateObjectId");
 
 const {
   createLibrary,
@@ -15,6 +15,14 @@ const {
 } = require("../controllers/libraryController");
 
 
+const statusFor = (error) => {
+  if (error.status) return error.status;
+  if (error.message?.startsWith("Invalid request body")) return 400;
+  if (error.message?.includes("not found")) return 404;
+  return 500;
+};
+
+
 const protectedRouter = express.Router();
 protectedRouter.use(authenticateToken);
 
@@ -24,9 +32,7 @@ protectedRouter.post("/", async (req, res) => {
     const library = await createLibrary(req.body, req.user.userId);
     res.status(201).send(library);
   } catch (error) {
-    const isBadRequest =
-      error.message && error.message.startsWith("Invalid request body");
-    res.status(isBadRequest ? 400 : 500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
@@ -36,19 +42,20 @@ protectedRouter.get("/", async (req, res) => {
     const libraries = await getLibraries(req.user.userId);
     res.status(200).send(libraries);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
 
 protectedRouter.delete(
   "/items/:libraryItemId",
+  validateObjectId("libraryItemId"),
   async (req, res) => {
     try {
-      await removeLibraryItem(req.params.libraryItemId);
+      await removeLibraryItem(req.params.libraryItemId, req.user.userId);
       res.status(204).send();
     } catch (error) {
-      res.status(error.message.includes("not found") ? 404 : 500).json({ error: error.message });
+      res.status(statusFor(error)).json({ error: error.message });
     }
   },
 );
@@ -56,32 +63,33 @@ protectedRouter.delete(
 
 protectedRouter.put("/:id", validateObjectId("id"), async (req, res) => {
   try {
-    const library = await updateLibrary(req.params.id, req.body);
+    const library = await updateLibrary(req.params.id, req.body, req.user.userId);
     res.status(200).send(library);
   } catch (error) {
-    res.status(error.message.includes("not found") ? 404 : 500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
 
 protectedRouter.delete("/:id", validateObjectId("id"), async (req, res) => {
   try {
-    await deleteLibrary(req.params.id);
+    await deleteLibrary(req.params.id, req.user.userId);
     res.status(204).send();
   } catch (error) {
-    res.status(error.message.includes("not found") ? 404 : 500).json({ error: error.message });
+    res.status(statusFor(error)).json({ error: error.message });
   }
 });
 
 
 protectedRouter.get(
   "/:id/items",
+  validateObjectId("id"),
   async (req, res) => {
     try {
-      const items = await getLibraryItems(req.params.id);
+      const items = await getLibraryItems(req.params.id, req.user.userId);
       res.status(200).send(items);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(statusFor(error)).json({ error: error.message });
     }
   },
 );
@@ -89,14 +97,13 @@ protectedRouter.get(
 
 protectedRouter.post(
   "/:id/items",
+  validateObjectId("id"),
   async (req, res) => {
     try {
-      const item = await addLibraryItem(req.params.id, req.body);
+      const item = await addLibraryItem(req.params.id, req.body, req.user.userId);
       res.status(201).send(item);
     } catch (error) {
-      const isBadRequest =
-        error.message && error.message.startsWith("Invalid request body");
-      res.status(isBadRequest ? 400 : 500).json({ error: error.message });
+      res.status(statusFor(error)).json({ error: error.message });
     }
   },
 );

@@ -6,4 +6,6 @@ module.exports = {
   SpecVersion: require("./specVerModel"),
   Schedule: require("./scheduleModel"),
   ScheduleItem: require("./scheduleItemModel"),
+  Library: require("./libraryModel"),
+  LibraryItem: require("./libraryItemModel"),
 };
