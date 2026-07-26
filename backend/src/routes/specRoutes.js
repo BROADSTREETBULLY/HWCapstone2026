@@ -49,7 +49,7 @@ protectedRouter.post("/", async (req, res) => {
   }
 });
 
-protectedRouter.get("/options/:optionId", async (req, res) => {
+protectedRouter.get("/options/:optionId",  validateObjectId("optionId"), async (req, res) => {
   try {
     const option = await getOption(req.params.optionId);
     res.status(200).send(option);
@@ -58,7 +58,7 @@ protectedRouter.get("/options/:optionId", async (req, res) => {
   }
 });
 
-protectedRouter.put("/options/:optionId", async (req, res) => {
+protectedRouter.put("/options/:optionId", validateObjectId("optionId"), async (req, res) => {
   try {
     const option = await updateOption(req.params.optionId, req.body);
     res.status(200).send(option);
@@ -67,7 +67,7 @@ protectedRouter.put("/options/:optionId", async (req, res) => {
   }
 });
 
-protectedRouter.post("/options/:optionId/versions", async (req, res) => {
+protectedRouter.post("/options/:optionId/versions", validateObjectId("optionId"), async (req, res) => {
   try {
     const version = await createVersion(
       req.params.optionId,
@@ -80,7 +80,7 @@ protectedRouter.post("/options/:optionId/versions", async (req, res) => {
   }
 });
 
-protectedRouter.get("/options/:optionId/versions", async (req, res) => {
+protectedRouter.get("/options/:optionId/versions", validateObjectId("optionId"), async (req, res) => {
   try {
     const versions = await getVersionsForOption(req.params.optionId);
     res.status(200).send(versions);
@@ -89,7 +89,7 @@ protectedRouter.get("/options/:optionId/versions", async (req, res) => {
   }
 });
 
-protectedRouter.get("/versions/:versionId", async (req, res) => {
+protectedRouter.get("/versions/:versionId", validateObjectId("versionId"), async (req, res) => {
   try {
     const version = await getVersion(req.params.versionId);
     res.status(200).send(version);
@@ -98,7 +98,7 @@ protectedRouter.get("/versions/:versionId", async (req, res) => {
   }
 });
 
-protectedRouter.get("/:id", async (req, res) => {
+protectedRouter.get("/:id", validateObjectId("id"), async (req, res) => {
   try {
     const spec = await getSpec(req.params.id);
     res.status(200).send(spec);
@@ -107,7 +107,7 @@ protectedRouter.get("/:id", async (req, res) => {
   }
 });
 
-protectedRouter.put("/:id", async (req, res) => {
+protectedRouter.put("/:id", validateObjectId("id"), async (req, res) => {
   try {
     const spec = await updateSpec(req.params.id, req.body, req.user.userId);
     res.status(200).send(spec);
@@ -116,7 +116,7 @@ protectedRouter.put("/:id", async (req, res) => {
   }
 });
 
-protectedRouter.delete("/:id", async (req, res) => {
+protectedRouter.delete("/:id", validateObjectId("id"), async (req, res) => {
   try {
     await deleteSpec(req.params.id);
     res.status(204).send();
@@ -125,7 +125,7 @@ protectedRouter.delete("/:id", async (req, res) => {
   }
 });
 
-protectedRouter.post("/:id/options", async (req, res) => {
+protectedRouter.post("/:id/options", validateObjectId("id"), async (req, res) => {
   try {
     const option = await createOption(req.params.id, req.body, req.user.userId);
     res.status(201).send(option);
@@ -134,7 +134,7 @@ protectedRouter.post("/:id/options", async (req, res) => {
   }
 });
 
-protectedRouter.get("/:id/options", async (req, res) => {
+protectedRouter.get("/:id/options", validateObjectId("id"), async (req, res) => {
   try {
     const options = await getOptionsForSpec(req.params.id);
     res.status(200).send(options);
