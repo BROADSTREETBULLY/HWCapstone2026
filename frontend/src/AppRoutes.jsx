@@ -4,7 +4,7 @@ import SpecShow from "./pages/SpecShow";
 import SpecCreate from "./components/SpecCreate";
 import SpecEdit from "./pages/SpecEdit";
 import PageNotFound from "./pages/PageNotFound";
-import HomePage from "./pages/homePage";
+import HomePage from "./pages/HomePage";
 import Dashboard from "./pages/Dashboard";
 import ProjectsPage from "./pages/ProjectsPage";
 import SpecLibrary from "./pages/SpecLibrary";
