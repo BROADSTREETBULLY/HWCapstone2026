@@ -11,11 +11,13 @@ const userRoutes = require("./routes/userRoutes");
 const specRoutes = require("./routes/specRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const libraryRoutes = require("./routes/libraryRoutes");
+const projectRoutes = require("./routes/projectRoutes");
 
 app.use("/api/specs", specRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/libraries", libraryRoutes);
+app.use("/api/projects", projectRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
