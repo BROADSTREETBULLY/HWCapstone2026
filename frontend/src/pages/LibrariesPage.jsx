@@ -35,8 +35,10 @@ import {
 } from "../data/specs";
 import SpecSearch from "../components/SpecSearch";
 import ImageEditCell from "../components/ImageEditCell";
+import MultilineEditCell from "../components/MultilineEditCell";
 import SpecRowDialogs from "../components/SpecRowDialogs";
-import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
+import PushToOrgDialog from "../components/PushToOrgDialog";
+import { gridBorderSx, multilineEnterGuard } from "../data/taxonomy";
 import PageContainer from "../components/PageContainer";
 
 function toRow(item) {
@@ -201,16 +203,32 @@ export default function LibrariesPage() {
 
   const [dialogState, setDialogState] = React.useState(null);
 
-  const handlePush = React.useCallback(
-    async (row) => {
+  const [pushRow, setPushRow] = React.useState(null);
+
+  const handlePushConfirm = React.useCallback(
+    async ({ cleanedText }) => {
+      const row = pushRow;
       try {
-        const result = await pushToLibrary(row.optionId);
-        notifications.show(
-          result?.pushedBack
-            ? "Pushed back to the org library as a new version."
-            : "Added to the org library as a new spec.",
-          { severity: "success", autoHideDuration: 4000 },
-        );
+        const textChanged = cleanedText !== row.spec;
+        if (textChanged) {
+          await createVersion(row.optionId, {
+            rawText: cleanedText || " ",
+            productName: row.desc,
+            imageKey: row.image || undefined,
+          });
+        }
+        await pushToLibrary(row.optionId);
+        if (textChanged) {
+          await createVersion(row.optionId, {
+            rawText: row.spec || " ",
+            productName: row.desc,
+            imageKey: row.image || undefined,
+          });
+        }
+        notifications.show("Pushed back to the org library as a new version.", {
+          severity: "success",
+          autoHideDuration: 4000,
+        });
         loadItems();
       } catch (err) {
         notifications.show(
@@ -219,9 +237,10 @@ export default function LibrariesPage() {
             : `Push failed. Reason: ${err.message}`,
           { severity: "error", autoHideDuration: 5000 },
         );
+        throw err;
       }
     },
-    [loadItems, notifications],
+    [pushRow, loadItems, notifications],
   );
 
   const columns = React.useMemo(
@@ -233,6 +252,7 @@ export default function LibrariesPage() {
         flex: 2,
         minWidth: 240,
         editable: true,
+        renderEditCell: (params) => <MultilineEditCell {...params} />,
         renderCell: ({ value }) => (
           <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>{value}</div>
         ),
@@ -249,7 +269,7 @@ export default function LibrariesPage() {
             <img
               src={value}
               alt=""
-              style={{ maxHeight: 48, maxWidth: 110, objectFit: "contain" }}
+              style={{ width: "100%", height: "auto", objectFit: "contain" }}
             />
           ) : null,
       },
@@ -258,15 +278,24 @@ export default function LibrariesPage() {
       {
         field: "push",
         headerName: "",
-        width: 150,
+        width: 170,
         sortable: false,
         filterable: false,
         renderCell: ({ row }) => (
-          <Tooltip title="Send your edits back to the org library as a new version">
-            <Button size="small" variant="outlined" onClick={() => handlePush(row)}>
-              PUSH TO ORG
+          <Stack spacing={0.5} sx={{ py: 0.5, width: "100%" }}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setDialogState({ mode: "addToSchedule", row })}
+            >
+              Add to Schedule
             </Button>
-          </Tooltip>
+            <Tooltip title="Send your edits back to the org library as a new version">
+              <Button size="small" variant="outlined" onClick={() => setPushRow(row)}>
+                PUSH TO ORG
+              </Button>
+            </Tooltip>
+          </Stack>
         ),
       },
       {
@@ -274,13 +303,6 @@ export default function LibrariesPage() {
         type: "actions",
         width: 60,
         getActions: ({ row }) => [
-          <GridActionsCellItem
-            key="add-to-schedule"
-            icon={<PlaylistAddIcon />}
-            label="Add to schedule"
-            title="Add to schedule"
-            onClick={() => setDialogState({ mode: "addToSchedule", row })}
-          />,
           <GridActionsCellItem
             key="remove"
             icon={<DeleteIcon />}
@@ -301,7 +323,7 @@ export default function LibrariesPage() {
         ],
       },
     ],
-    [handlePush, loadItems, notifications],
+    [loadItems, notifications],
   );
 
   return (
@@ -371,12 +393,14 @@ export default function LibrariesPage() {
             These are your editable copies. Double-click a row to edit; edits
             save as new versions. PUSH TO ORG updates the original library spec.
           </Typography>
+          <Box sx={{ width: "100%", height: "calc(100vh - 400px)", minHeight: 360 }}>
           <DataGrid
             rows={rows}
             columns={columns}
             loading={isLoading}
             disableRowSelectionOnClick
             editMode="row"
+            onCellKeyDown={multilineEnterGuard(["spec"])}
             processRowUpdate={processRowUpdate}
             onProcessRowUpdateError={(err) =>
               notifications.show(`Failed to save changes. Reason: ${err.message}`, {
@@ -385,10 +409,11 @@ export default function LibrariesPage() {
               })
             }
             getRowHeight={() => "auto"}
-            sx={{ "& .MuiDataGrid-cell": { py: 0.5, alignItems: "center" } }}
+            sx={gridBorderSx}
             initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
             pageSizeOptions={[25, 50, 100]}
           />
+          </Box>
         </Box>
       )}
 
@@ -396,6 +421,13 @@ export default function LibrariesPage() {
         mode={dialogState?.mode}
         row={dialogState?.row}
         onClose={() => setDialogState(null)}
+      />
+      <PushToOrgDialog
+        open={Boolean(pushRow)}
+        row={pushRow}
+        askCategory={false}
+        onClose={() => setPushRow(null)}
+        onConfirm={handlePushConfirm}
       />
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth>

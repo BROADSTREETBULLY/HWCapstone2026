@@ -34,7 +34,10 @@ import {
 import { getProject } from "../data/projects";
 import SpecSearch from "../components/SpecSearch";
 import ImageEditCell from "../components/ImageEditCell";
+import MultilineEditCell from "../components/MultilineEditCell";
 import PageContainer from "../components/PageContainer";
+import PushToOrgDialog from "../components/PushToOrgDialog";
+import { gridBorderSx, multilineEnterGuard } from "../data/taxonomy";
 
 
 function toRow(item) {
@@ -46,11 +49,13 @@ function toRow(item) {
   const spec = option?.specID && typeof option.specID === "object" ? option.specID : null;
   return {
     id: item._id,
+    sortOrder: item.sortOrder ?? 0,
     itemCode: item.itemCode ?? "",
     desc: version?.productName ?? "",
     spec: version?.rawText ?? "",
     supplier: supplierFromVersion(version),
     category: spec?.category ?? "",
+    subCategory: spec?.subCategory ?? "",
     image: version?.imageKey ?? "",
     revisedOn: version?.createdAt ?? null,
     specId: spec?._id ?? null,
@@ -81,7 +86,7 @@ export default function ScheduleShow() {
         getItems(scheduleId),
       ]);
       setSchedule(scheduleData);
-      setRows(items.map(toRow));
+      setRows(items.map(toRow).sort((a, b) => a.sortOrder - b.sortOrder));
       if (scheduleData?.projectID) {
         getProject(scheduleData.projectID)
           .then(setProject)
@@ -138,11 +143,12 @@ export default function ScheduleShow() {
 
   const handleNewSpec = async () => {
     try {
+      const minSort = rows.length ? Math.min(...rows.map((r) => r.sortOrder)) : 1;
       await createItem(scheduleId, {
         orgId: getUser()?.orgId,
         productName: "",
         rawText: " ",
-        sortOrder: rows.length,
+        sortOrder: minSort - 1,
       });
       loadData();
     } catch (err) {
@@ -156,9 +162,6 @@ export default function ScheduleShow() {
   const processRowUpdate = React.useCallback(async (newRow, oldRow) => {
     if (newRow.itemCode !== oldRow.itemCode) {
       await updateItem(newRow.id, { itemCode: newRow.itemCode });
-    }
-    if (newRow.category !== oldRow.category && newRow.specId) {
-      await updateSpecFields(newRow.specId, { category: newRow.category });
     }
     if (
       newRow.desc !== oldRow.desc ||
@@ -195,15 +198,36 @@ export default function ScheduleShow() {
     [notifications],
   );
 
-
-  const handlePush = React.useCallback(
-    async (row) => {
+  const [pushRow, setPushRow] = React.useState(null);
+  const handlePushConfirm = React.useCallback(
+    async ({ cleanedText, category, subCategory }) => {
+      const row = pushRow;
       try {
+        const textChanged = cleanedText !== row.spec;
+        if (category && row.specId) {
+          await updateSpecFields(row.specId, { category, subCategory });
+        }
+        if (textChanged) {
+          await createVersion(row.optionId, {
+            rawText: cleanedText || " ",
+            productName: row.desc,
+            imageKey: row.image || undefined,
+          });
+        }
         await pushToLibrary(row.optionId);
-        notifications.show("Added to the org library as a new spec.", {
-          severity: "success",
-          autoHideDuration: 4000,
-        });
+        if (textChanged) {
+          await createVersion(row.optionId, {
+            rawText: row.spec || " ",
+            productName: row.desc,
+            imageKey: row.image || undefined,
+          });
+        }
+        notifications.show(
+          row.derived
+            ? "Pushed back to the org library as a new version."
+            : "Added to the org library.",
+          { severity: "success", autoHideDuration: 4000 },
+        );
         loadData();
       } catch (err) {
         notifications.show(
@@ -212,9 +236,10 @@ export default function ScheduleShow() {
             : `Push failed. Reason: ${err.message}`,
           { severity: "error", autoHideDuration: 5000 },
         );
+        throw err;
       }
     },
-    [loadData, notifications],
+    [pushRow, loadData, notifications],
   );
 
   const columns = React.useMemo(
@@ -227,12 +252,13 @@ export default function ScheduleShow() {
         flex: 2,
         minWidth: 220,
         editable: true,
+        renderEditCell: (params) => <MultilineEditCell {...params} />,
         renderCell: ({ value }) => (
           <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>{value}</div>
         ),
       },
       { field: "supplier", headerName: "Supplier", width: 130, editable: true },
-      { field: "category", headerName: "Category", width: 110, editable: true },
+      { field: "subCategory", headerName: "Sub Category", width: 130 },
       {
         field: "image",
         headerName: "Image",
@@ -244,7 +270,7 @@ export default function ScheduleShow() {
             <img
               src={value}
               alt=""
-              style={{ maxHeight: 60, maxWidth: 120, objectFit: "contain" }}
+              style={{ width: "100%", height: "auto", objectFit: "contain" }}
             />
           ) : null,
       },
@@ -262,9 +288,15 @@ export default function ScheduleShow() {
         sortable: false,
         filterable: false,
         renderCell: ({ row }) =>
-          !row.derived && !row.pushed ? (
-            <Tooltip title="Add this new spec to the org library">
-              <Button size="small" variant="outlined" onClick={() => handlePush(row)}>
+          row.derived || !row.pushed ? (
+            <Tooltip
+              title={
+                row.derived
+                  ? "Send your edits back to the org library as a new version"
+                  : "Add this new spec to the org library"
+              }
+            >
+              <Button size="small" variant="outlined" onClick={() => setPushRow(row)}>
                 PUSH TO ORG
               </Button>
             </Tooltip>
@@ -295,7 +327,7 @@ export default function ScheduleShow() {
         ],
       },
     ],
-    [handlePush, loadData, notifications],
+    [loadData, notifications],
   );
 
   return (
@@ -360,22 +392,30 @@ export default function ScheduleShow() {
       {error ? (
         <Alert severity="error">{error.message}</Alert>
       ) : (
-        <Box sx={{ width: "100%" }}>
+        <Box sx={{ width: "100%", height: "calc(100vh - 360px)", minHeight: 360 }}>
           <DataGrid
             rows={rows}
             columns={columns}
             loading={isLoading}
             disableRowSelectionOnClick
             editMode="row"
+            onCellKeyDown={multilineEnterGuard(["spec"])}
             processRowUpdate={processRowUpdate}
             onProcessRowUpdateError={handleProcessRowUpdateError}
             getRowHeight={() => "auto"}
-            sx={{ "& .MuiDataGrid-cell": { py: 0.5, alignItems: "center" } }}
+            sx={gridBorderSx}
             initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
             pageSizeOptions={[25, 50, 100]}
           />
         </Box>
       )}
+      <PushToOrgDialog
+        open={Boolean(pushRow)}
+        row={pushRow}
+        askCategory={!pushRow?.derived}
+        onClose={() => setPushRow(null)}
+        onConfirm={handlePushConfirm}
+      />
     </PageContainer>
   );
 }
