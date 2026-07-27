@@ -7,7 +7,6 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "react-router-dom";
-import SpecSearch from "../components/SpecSearch";
 import ProjectCard from "../components/ProjectCard";
 import ProjectFormDialog from "../components/ProjectFormDialog";
 import useNotifications from "../hooks/useNotifications/useNotifications";
@@ -65,17 +64,6 @@ function Dashboard() {
     }
   };
 
-
-  const handleSearchSelect = (spec) => {
-    navigate(
-      `/dashboard/library?filter=${encodeURIComponent(
-        JSON.stringify({
-          items: [{ field: "desc", value: spec.desc, operator: "contains" }],
-        }),
-      )}`,
-    );
-  };
-
   return (
     <>
       <Container maxWidth={false} sx={{ flex: 1, display: 'flex', flexDirection: 'column', mt: 2 }}>
@@ -87,16 +75,6 @@ function Dashboard() {
             <Button variant="contained" onClick={() => setDialogOpen(true)}>
               New Project
             </Button>
-          </Stack>
-        </DemoPaper>
-      </Container>
-      <Container maxWidth={false} sx={{ flex: 1, display: 'flex', flexDirection: 'column', mt: 2 }}>
-        <DemoPaper square={false} sx={{ mt: 2 }}>
-          <Stack
-            direction="row"
-            sx={{ justifyContent: "space-evenly", width: "100%" }}
-          >
-            <SpecSearch onAdd={handleSearchSelect} />
           </Stack>
         </DemoPaper>
       </Container>

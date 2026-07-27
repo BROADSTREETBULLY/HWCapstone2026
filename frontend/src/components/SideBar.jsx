@@ -18,7 +18,9 @@ const NAV_ITEMS_TOP = [
 ];
 
 const NAV_ITEMS_MAIN = [
-  { label: 'Org Library', path: '/dashboard/library' },
+  { label: 'Furniture Library', path: '/dashboard/library/furniture' },
+  { label: 'FF&E Library', path: '/dashboard/library/ffe' },
+  { label: 'Finishes Library', path: '/dashboard/library/finishes' },
   { label: 'My Libraries', path: '/dashboard/libraries' },
 ];
 
