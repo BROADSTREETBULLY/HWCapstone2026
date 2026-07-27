@@ -15,6 +15,7 @@ const ProjectSchema = new Schema(
     projectAddress: { type: String, trim: true },
     projectDescription: { type: String, trim: true },
     projectComments: { type: String, trim: true },
+    projectImage: { type: String, trim: true },
     projectLead: { type: Schema.Types.ObjectId, ref: "User" },
   },
 { timestamps: true },

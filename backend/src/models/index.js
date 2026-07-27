@@ -8,4 +8,5 @@ module.exports = {
   ScheduleItem: require("./scheduleItemModel"),
   Library: require("./libraryModel"),
   LibraryItem: require("./libraryItemModel"),
+  Project: require("./projectModel"),
 };
