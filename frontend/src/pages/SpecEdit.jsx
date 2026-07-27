@@ -124,7 +124,7 @@ export default function SpecEdit() {
     setIsLoading(true);
 
     try {
-      const showData = await getSpec(Number(SpecId));
+      const showData = await getSpec(SpecId);
 
       setSpec(showData);
     } catch (showDataError) {
@@ -139,7 +139,7 @@ export default function SpecEdit() {
 
   const handleSubmit = React.useCallback(
     async (formValues) => {
-      const updatedData = await updateSpec(Number(SpecId), formValues);
+      const updatedData = await updateSpec(SpecId, formValues);
       setSpec(updatedData);
     },
     [SpecId],

@@ -172,7 +172,7 @@ export default function SpecList() {
       if (confirmed) {
         setIsLoading(true);
         try {
-          await deleteSpec(Number(Spec.id));
+          await deleteSpec(Spec.id);
 
           notifications.show("Spec deleted successfully.", {
             severity: "success",
