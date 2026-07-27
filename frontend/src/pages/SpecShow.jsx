@@ -34,7 +34,7 @@ export default function SpecShow() {
     setIsLoading(true);
 
     try {
-      const showData = await getSpec(Number(SpecId));
+      const showData = await getSpec(SpecId);
 
       setSpec(showData);
     } catch (showDataError) {
@@ -69,7 +69,7 @@ export default function SpecShow() {
     if (confirmed) {
       setIsLoading(true);
       try {
-        await deleteSpec(Number(SpecId));
+        await deleteSpec(SpecId);
 
         navigate("/dashboard/specs");
 
