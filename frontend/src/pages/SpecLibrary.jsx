@@ -2,20 +2,31 @@ import * as React from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import { DataGrid, GridActionsCellItem, gridClasses } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { useDialogs } from "../hooks/useDialogs/useDialogs";
 import useNotifications from "../hooks/useNotifications/useNotifications";
-import { deleteOne as deleteSpec, getAll as getSpecs, createOne } from "../data/specs";
+import {
+  deleteOne as deleteSpec,
+  getAll as getSpecs,
+  createOne,
+  createVersion,
+  updateSpecFields,
+  upsertSupplierLine,
+} from "../data/specs";
+import MultilineEditCell from "../components/MultilineEditCell";
+import ImageEditCell from "../components/ImageEditCell";
+import SpecRowDialogs from "../components/SpecRowDialogs";
+import HistoryIcon from "@mui/icons-material/History";
+import LayersIcon from "@mui/icons-material/Layers";
+import BookmarkAddIcon from "@mui/icons-material/BookmarkAdd";
+import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import PageContainer from "../components/PageContainer";
-
 
 const INITIAL_PAGE_SIZE = 10;
 
@@ -139,25 +150,70 @@ export default function SpecLibrary() {
     }
   }, [isLoading, loadData]);
 
-  const handleRowClick = React.useCallback(
-    ({ row }) => {
-      navigate(`/dashboard/specs/${row.id}`);
+  const handleNewSpec = React.useCallback(async () => {
+    try {
+      await createOne({ category: "", subCategory: "", desc: "", spec: "" });
+      notifications.show("Blank spec added — double-click the row to fill it in.", {
+        severity: "success",
+        autoHideDuration: 4000,
+      });
+      loadData();
+    } catch (createError) {
+      notifications.show(`Failed to create spec. Reason: ${createError.message}`, {
+        severity: "error",
+        autoHideDuration: 5000,
+      });
+    }
+  }, [notifications, loadData]);
+
+
+  const processRowUpdate = React.useCallback(async (newRow, oldRow) => {
+    if (newRow.category !== oldRow.category) {
+      await updateSpecFields(newRow.id, { category: newRow.category });
+    }
+    if (
+      newRow.desc !== oldRow.desc ||
+      newRow.spec !== oldRow.spec ||
+      newRow.image !== oldRow.image ||
+      newRow.comment !== oldRow.comment ||
+      newRow.supplier !== oldRow.supplier
+    ) {
+      if (!newRow.optionId) throw new Error("Row has no option to version");
+      let rawText = newRow.spec || oldRow.spec || " ";
+      if (newRow.supplier !== oldRow.supplier) {
+        rawText = upsertSupplierLine(rawText, newRow.supplier);
+      }
+      const version = await createVersion(newRow.optionId, {
+        rawText,
+        productName: newRow.desc,
+        imageKey: newRow.image || undefined,
+        internalComments: newRow.comment || undefined,
+      });
+      return { ...newRow, spec: version.rawText, rev: version.versionNumber, revisedOn: version.createdAt };
+    }
+    return newRow;
+  }, []);
+
+  const handleProcessRowUpdateError = React.useCallback(
+    (updateError) => {
+      notifications.show(`Failed to save changes. Reason: ${updateError.message}`, {
+        severity: "error",
+        autoHideDuration: 5000,
+      });
     },
-    [navigate],
+    [notifications],
   );
 
-
-  const handleRowEdit = React.useCallback(
-    (Spec) => () => {
-      navigate(`${Spec.id}/edit`);
-    },
-    [navigate],
+  const [dialogState, setDialogState] = React.useState(null);
+  const openRowDialog = React.useCallback(
+    (mode, row) => () => setDialogState({ mode, row }),
+    [],
   );
 
   const handleRowDelete = React.useCallback(
     (Spec) => async () => {
       const confirmed = await dialogs.confirm(
-        `Do you wish to delete ${Spec.code}?`,
+        `Do you wish to delete ${Spec.desc || "this spec"}?`,
         {
           title: `Delete Spec?`,
           severity: "error",
@@ -194,9 +250,9 @@ export default function SpecLibrary() {
   const initialState = React.useMemo(
     () => ({
       pagination: { paginationModel: { pageSize: INITIAL_PAGE_SIZE } },
-          columns: {
-      columnVisibilityModel: { code: false, revisedOn: false, rev: false},
-          }
+      columns: {
+        columnVisibilityModel: { id: false, code: false, revisedOn: false, rev: false },
+      },
     }),
     [],
   );
@@ -218,16 +274,19 @@ export default function SpecLibrary() {
         field: "desc",
         headerName: "Description",
         width: 110,
+        editable: true,
         renderCell: ({ value }) => (
           <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>
             {value}
           </div>
         ),
       },
-            {
+      {
         field: "spec",
         headerName: "Specification",
         width: 450,
+        editable: true,
+        renderEditCell: (params) => <MultilineEditCell {...params} />,
         renderCell: ({ value }) => (
           <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>
             {value}
@@ -238,6 +297,7 @@ export default function SpecLibrary() {
         field: "supplier",
         headerName: "Supplier",
         width: 250,
+        editable: true,
         renderCell: ({ value }) => (
           <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>
             {value}
@@ -247,6 +307,7 @@ export default function SpecLibrary() {
       {
         field: "category",
         headerName: "Category",
+        editable: true,
         type: "singleSelect",
         valueOptions: [
           "Chair",
@@ -262,6 +323,8 @@ export default function SpecLibrary() {
         field: "image",
         headerName: "Image",
         width: 150,
+        editable: true,
+        renderEditCell: (params) => <ImageEditCell {...params} />,
         renderCell: ({ value }) =>
           value ? (
             <img
@@ -271,17 +334,19 @@ export default function SpecLibrary() {
             />
           ) : null,
       },
-            {
+      {
         field: "comment",
         headerName: "Comment",
         width: 200,
+        editable: true,
+        renderEditCell: (params) => <MultilineEditCell {...params} />,
         renderCell: ({ value }) => (
           <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>
             {value}
           </div>
         ),
       },
-            {
+      {
         field: "rev",
         headerName: "REV",
         width: 70,
@@ -298,7 +363,7 @@ export default function SpecLibrary() {
         valueGetter: (value) => value && new Date(value),
         width: 100,
       },
-      
+
       {
         field: "actions",
         type: "actions",
@@ -306,28 +371,64 @@ export default function SpecLibrary() {
         align: "right",
         getActions: ({ row }) => [
           <GridActionsCellItem
-            key="edit-item"
-            icon={<EditIcon />}
-            label="Edit"
-            onClick={handleRowEdit(row)}
+            key="versions"
+            icon={<HistoryIcon />}
+            label="Previous versions"
+            title="Previous versions"
+            onClick={openRowDialog("versions", row)}
+          />,
+          <GridActionsCellItem
+            key="options"
+            icon={<LayersIcon />}
+            label="Options"
+            title="Options"
+            onClick={openRowDialog("options", row)}
+          />,
+          <GridActionsCellItem
+            key="add-to-library"
+            icon={<BookmarkAddIcon />}
+            label="Add to my library"
+            title="Add to my library"
+            onClick={openRowDialog("addToLibrary", row)}
+          />,
+          <GridActionsCellItem
+            key="add-to-schedule"
+            icon={<PlaylistAddIcon />}
+            label="Add to schedule"
+            title="Add to schedule"
+            onClick={openRowDialog("addToSchedule", row)}
           />,
           <GridActionsCellItem
             key="delete-item"
             icon={<DeleteIcon />}
             label="Delete"
+            title="Delete"
             onClick={handleRowDelete(row)}
           />,
         ],
       },
     ],
-    [handleRowEdit, handleRowDelete],
+    [handleRowDelete, openRowDialog],
   );
 
   const pageTitle = "Furniture Library";
 
   return (
     <PageContainer
-      title={pageTitle} >
+      title={pageTitle}
+      actions={
+        <Stack direction="row" spacing={1}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleNewSpec}>
+            New Spec
+          </Button>
+          <Tooltip title="Reload">
+            <Button variant="outlined" onClick={handleRefresh}>
+              <RefreshIcon fontSize="small" />
+            </Button>
+          </Tooltip>
+        </Stack>
+      }
+    >
       <Box sx={{ flex: 1, width: "100%" }}>
         {error ? (
           <Box sx={{ flexGrow: 1 }}>
@@ -350,7 +451,9 @@ export default function SpecLibrary() {
             filterModel={filterModel}
             onFilterModelChange={handleFilterModelChange}
             disableRowSelectionOnClick
-            onRowClick={handleRowClick}
+            editMode="row"
+            processRowUpdate={processRowUpdate}
+            onProcessRowUpdateError={handleProcessRowUpdateError}
             loading={isLoading}
             initialState={initialState}
             showToolbar
@@ -380,7 +483,11 @@ export default function SpecLibrary() {
           />
         )}
       </Box>
+      <SpecRowDialogs
+        mode={dialogState?.mode}
+        row={dialogState?.row}
+        onClose={() => setDialogState(null)}
+      />
     </PageContainer>
   );
 }
-

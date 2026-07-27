@@ -1,5 +1,12 @@
 import { apiFetch, getUser } from "./api";
 
+function supplierFromVersionInternal(version) {
+  const fromAttr = (version?.attributes ?? []).find((a) =>
+    /^supplier$/i.test(a.key ?? ""),
+  );
+  return fromAttr?.value ?? "";
+}
+
 async function enrichSpec(doc) {
   let options = [];
   try {
@@ -22,8 +29,8 @@ async function enrichSpec(doc) {
     rev: version?.versionNumber ?? "",
     revisedOn: version?.createdAt ?? doc.updatedAt ?? null,
     code: "",
-    supplier: "",
-    optionId: active?._id ?? null, 
+    supplier: supplierFromVersionInternal(version),
+    optionId: active?._id ?? null,
     optionCount: options.length,
     _raw: doc,
   };
@@ -64,7 +71,6 @@ export async function queryLibrary({ paginationModel, filterModel, sortModel }) 
 export const getAll = queryLibrary;
 export const getMany = queryLibrary;
 
-
 export async function searchLibrary(query) {
   if (!query) return [];
   const data = await apiFetch("/api/specs/query", {
@@ -93,7 +99,6 @@ export async function getOne(specId) {
   return enrichSpec(doc);
 }
 
-
 export async function createOne(formValues) {
   const user = getUser();
   const spec = await apiFetch("/api/specs", {
@@ -113,7 +118,7 @@ export async function createOne(formValues) {
     method: "POST",
     body: {
       productName: formValues.desc,
-      rawText: formValues.spec,
+      rawText: formValues.spec || " ", 
       imageKey: formValues.image || undefined,
       internalComments: formValues.comment || undefined,
     },
@@ -135,7 +140,7 @@ export async function updateOne(specId, formValues) {
     if (active) {
       await createVersion(active._id, {
         productName: formValues.desc,
-        rawText: formValues.spec,
+        rawText: formValues.spec || " ", 
         imageKey: formValues.image || undefined,
         internalComments: formValues.comment || undefined,
       });
@@ -155,6 +160,7 @@ export async function getVersions(optionId) {
   return apiFetch(`/api/specs/options/${optionId}/versions`); 
 }
 
+
 export async function createVersion(optionId, { rawText, productName, imageKey, internalComments, attributes }) {
   return apiFetch(`/api/specs/options/${optionId}/versions`, {
     method: "POST",
@@ -162,10 +168,28 @@ export async function createVersion(optionId, { rawText, productName, imageKey, 
   });
 }
 
+
 export async function pushToLibrary(optionId) {
   return apiFetch(`/api/specs/options/${optionId}/push-to-library`, {
     method: "POST",
   });
+}
+
+
+
+export function supplierFromVersion(version) {
+  const fromAttr = (version?.attributes ?? []).find((a) =>
+    /^supplier$/i.test(a.key ?? ""),
+  );
+  return fromAttr?.value ?? "";
+}
+
+export function upsertSupplierLine(rawText, supplier) {
+  const lines = (rawText ?? "").split(/\r?\n/).filter(
+    (line) => !/^\s*supplier\s*:/i.test(line),
+  );
+  if (supplier) lines.push(`Supplier: ${supplier}`);
+  return lines.join("\n") || " ";
 }
 
 
@@ -178,4 +202,11 @@ export function validate(formValues) {
     issues.push({ path: ["spec"], message: "Specification text is required" });
   }
   return { issues };
+}
+
+export async function updateSpecFields(specId, { category, subCategory }) {
+  return apiFetch(`/api/specs/${specId}`, {
+    method: "PUT",
+    body: { category, subCategory },
+  });
 }

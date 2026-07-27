@@ -11,7 +11,11 @@ export async function createSchedule({ projectID, scheduleType, scheduleTitle })
 }
 
 export async function getSchedules(projectID) {
-  return apiFetch(`/api/schedules?projectID=${encodeURIComponent(projectID)}`);
+  return apiFetch(
+    projectID
+      ? `/api/schedules?projectID=${encodeURIComponent(projectID)}`
+      : "/api/schedules",
+  );
 }
 
 export async function getSchedule(id) {
@@ -25,7 +29,6 @@ export async function updateSchedule(id, fields) {
 export async function deleteSchedule(id) {
   return apiFetch(`/api/schedules/${id}`, { method: "DELETE" });
 }
-
 
 export async function getItems(scheduleId) {
   return apiFetch(`/api/schedules/${scheduleId}/items`);
