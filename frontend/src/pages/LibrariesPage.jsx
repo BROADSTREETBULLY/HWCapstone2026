@@ -32,6 +32,8 @@ import {
   pushToLibrary,
   supplierFromVersion,
   upsertSupplierLine,
+  getOption,
+  getVersion,
 } from "../data/specs";
 import SpecSearch from "../components/SpecSearch";
 import ImageEditCell from "../components/ImageEditCell";
@@ -57,6 +59,9 @@ function toRow(item) {
     comment: version?.internalComments ?? "",
     rev: version?.versionNumber ?? "",
     optionId: option?._id ?? null,
+    specId: option?.specID?._id ?? option?.specID ?? null,
+    derived: Boolean(option?.derivedFromVersionID),
+    derivedFromVersionId: option?.derivedFromVersionID ?? null,
   };
 }
 
@@ -130,8 +135,7 @@ export default function LibrariesPage() {
   const handleDeleteLibrary = async () => {
     const lib = libraries.find((l) => l._id === selectedId);
     if (!lib) return;
-    if (!window.confirm(`Delete library "${lib.name}" and all its items?`))
-      return;
+    if (!window.confirm(`Delete library "${lib.name}" and all its items?`)) return;
     try {
       await deleteLibrary(selectedId);
       setSelectedId("");
@@ -203,6 +207,30 @@ export default function LibrariesPage() {
 
   const [dialogState, setDialogState] = React.useState(null);
 
+  const openOptions = React.useCallback(
+    async (row) => {
+      try {
+        let specId = row.specId;
+        let editable = true;
+        if (row.derived && row.derivedFromVersionId) {
+          const sourceVersion = await getVersion(row.derivedFromVersionId);
+          const sourceOption = await getOption(
+            sourceVersion.optionID?._id ?? sourceVersion.optionID,
+          );
+          specId = sourceOption.specID?._id ?? sourceOption.specID;
+          editable = false;
+        }
+        setDialogState({ mode: "options", row: { ...row, id: specId }, editable, sourceRow: row });
+      } catch (err) {
+        notifications.show(`Failed to open options. Reason: ${err.message}`, {
+          severity: "error",
+          autoHideDuration: 5000,
+        });
+      }
+    },
+    [notifications],
+  );
+
   const [pushRow, setPushRow] = React.useState(null);
 
   const handlePushConfirm = React.useCallback(
@@ -245,13 +273,7 @@ export default function LibrariesPage() {
 
   const columns = React.useMemo(
     () => [
-      {
-        field: "desc",
-        headerName: "Product",
-        flex: 1,
-        minWidth: 160,
-        editable: true,
-      },
+      { field: "desc", headerName: "Product", flex: 1, minWidth: 160, editable: true },
       {
         field: "spec",
         headerName: "Specification",
@@ -260,9 +282,7 @@ export default function LibrariesPage() {
         editable: true,
         renderEditCell: (params) => <MultilineEditCell {...params} />,
         renderCell: ({ value }) => (
-          <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>
-            {value}
-          </div>
+          <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>{value}</div>
         ),
       },
       { field: "supplier", headerName: "Supplier", width: 140, editable: true },
@@ -281,13 +301,7 @@ export default function LibrariesPage() {
             />
           ) : null,
       },
-      {
-        field: "comment",
-        headerName: "Comment",
-        flex: 1,
-        minWidth: 140,
-        editable: true,
-      },
+      { field: "comment", headerName: "Comment", flex: 1, minWidth: 140, editable: true },
       { field: "rev", headerName: "Rev", width: 60 },
       {
         field: "push",
@@ -297,6 +311,9 @@ export default function LibrariesPage() {
         filterable: false,
         renderCell: ({ row }) => (
           <Stack spacing={0.5} sx={{ py: 0.5, width: "100%" }}>
+            <Button size="small" variant="outlined" onClick={() => openOptions(row)}>
+              Options
+            </Button>
             <Button
               size="small"
               variant="outlined"
@@ -305,11 +322,7 @@ export default function LibrariesPage() {
               Add to Schedule
             </Button>
             <Tooltip title="Send your edits back to the org library as a new version">
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => setPushRow(row)}
-              >
+              <Button size="small" variant="outlined" onClick={() => setPushRow(row)}>
                 PUSH TO ORG
               </Button>
             </Tooltip>
@@ -386,16 +399,13 @@ export default function LibrariesPage() {
         </FormControl>
         {selectedId && (
           <Tooltip title="Delete this library">
-            <Button
-              color="error"
-              variant="outlined"
-              onClick={handleDeleteLibrary}
-            >
+            <Button color="error" variant="outlined" onClick={handleDeleteLibrary}>
               <DeleteIcon fontSize="small" />
             </Button>
           </Tooltip>
         )}
       </Stack>
+
       <Box sx={{ mb: 1 }}>
         <SpecSearch onAdd={handleAddFromOrg} />
       </Box>
@@ -416,37 +426,26 @@ export default function LibrariesPage() {
             These are your editable copies. Double-click a row to edit; edits
             save as new versions. PUSH TO ORG updates the original library spec.
           </Typography>
-          <Box
-            sx={{
-              width: "100%",
-              height: "calc(100vh - 400px)",
-              minHeight: 360,
-            }}
-          >
-            <DataGrid
-              rows={rows}
-              columns={columns}
-              loading={isLoading}
-              disableRowSelectionOnClick
-              editMode="row"
-              onCellKeyDown={multilineEnterGuard(["spec"])}
-              processRowUpdate={processRowUpdate}
-              onProcessRowUpdateError={(err) =>
-                notifications.show(
-                  `Failed to save changes. Reason: ${err.message}`,
-                  {
-                    severity: "error",
-                    autoHideDuration: 5000,
-                  },
-                )
-              }
-              getRowHeight={() => "auto"}
-              sx={gridBorderSx}
-              initialState={{
-                pagination: { paginationModel: { pageSize: 25 } },
-              }}
-              pageSizeOptions={[25, 50, 100]}
-            />
+          <Box sx={{ width: "100%", height: "calc(100vh - 400px)", minHeight: 360 }}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            loading={isLoading}
+            disableRowSelectionOnClick
+            editMode="row"
+            onCellKeyDown={multilineEnterGuard(["spec"])}
+            processRowUpdate={processRowUpdate}
+            onProcessRowUpdateError={(err) =>
+              notifications.show(`Failed to save changes. Reason: ${err.message}`, {
+                severity: "error",
+                autoHideDuration: 5000,
+              })
+            }
+            getRowHeight={() => "auto"}
+            sx={gridBorderSx}
+            initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
+            pageSizeOptions={[25, 50, 100]}
+          />
           </Box>
         </Box>
       )}
@@ -455,6 +454,24 @@ export default function LibrariesPage() {
         mode={dialogState?.mode}
         row={dialogState?.row}
         onClose={() => setDialogState(null)}
+        onChanged={loadItems}
+        editableOptions={dialogState?.editable ?? true}
+        context={
+          dialogState?.sourceRow
+            ? {
+                addLabel: "Add to Library",
+                onAdd: async (optionId) => {
+                  await addLibraryItem(selectedId, { optionID: optionId });
+                  loadItems();
+                },
+                onReplace: async (optionId) => {
+                  await addLibraryItem(selectedId, { optionID: optionId });
+                  await removeLibraryItem(dialogState.sourceRow.id);
+                  loadItems();
+                },
+              }
+            : null
+        }
       />
       <PushToOrgDialog
         open={Boolean(pushRow)}

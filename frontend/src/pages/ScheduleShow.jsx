@@ -30,9 +30,12 @@ import {
   updateSpecFields,
   supplierFromVersion,
   upsertSupplierLine,
+  getOption,
+  getVersion,
 } from "../data/specs";
 import { getProject } from "../data/projects";
 import SpecSearch from "../components/SpecSearch";
+import SpecRowDialogs from "../components/SpecRowDialogs";
 import ImageEditCell from "../components/ImageEditCell";
 import MultilineEditCell from "../components/MultilineEditCell";
 import PageContainer from "../components/PageContainer";
@@ -40,14 +43,12 @@ import PushToOrgDialog from "../components/PushToOrgDialog";
 import { gridBorderSx, multilineEnterGuard } from "../data/taxonomy";
 
 function toRow(item) {
-  const option =
-    item.optionID && typeof item.optionID === "object" ? item.optionID : null;
+  const option = item.optionID && typeof item.optionID === "object" ? item.optionID : null;
   const version =
     option?.currentVersionID && typeof option.currentVersionID === "object"
       ? option.currentVersionID
       : null;
-  const spec =
-    option?.specID && typeof option.specID === "object" ? option.specID : null;
+  const spec = option?.specID && typeof option.specID === "object" ? option.specID : null;
   return {
     id: item._id,
     sortOrder: item.sortOrder ?? 0,
@@ -62,6 +63,7 @@ function toRow(item) {
     specId: spec?._id ?? null,
     optionId: option?._id ?? null,
     derived: Boolean(option?.derivedFromVersionID),
+    derivedFromVersionId: option?.derivedFromVersionID ?? null,
     pushed: Boolean(option?.pushedAsOptionID),
   };
 }
@@ -144,14 +146,12 @@ export default function ScheduleShow() {
 
   const handleNewSpec = async () => {
     try {
-      const minSort = rows.length
-        ? Math.min(...rows.map((r) => r.sortOrder))
-        : 1;
+      const minSort = rows.length ? Math.min(...rows.map((r) => r.sortOrder)) : 1;
       await createItem(scheduleId, {
         orgId: getUser()?.orgId,
         productName: "",
         rawText: " ",
-        sortOrder: minSort - 1,
+        sortOrder: minSort - 1, 
       });
       loadData();
     } catch (err) {
@@ -202,6 +202,32 @@ export default function ScheduleShow() {
   );
 
   const [pushRow, setPushRow] = React.useState(null);
+  const [dialogState, setDialogState] = React.useState(null);
+
+  const openOptions = React.useCallback(
+    async (row) => {
+      try {
+        let specId = row.specId;
+        let editable = true;
+        if (row.derived && row.derivedFromVersionId) {
+          const sourceVersion = await getVersion(row.derivedFromVersionId);
+          const sourceOption = await getOption(
+            sourceVersion.optionID?._id ?? sourceVersion.optionID,
+          );
+          specId = sourceOption.specID?._id ?? sourceOption.specID;
+          editable = false;
+        }
+        setDialogState({ mode: "options", row: { ...row, id: specId }, editable, sourceRow: row });
+      } catch (err) {
+        notifications.show(`Failed to open options. Reason: ${err.message}`, {
+          severity: "error",
+          autoHideDuration: 5000,
+        });
+      }
+    },
+    [notifications],
+  );
+
   const handlePushConfirm = React.useCallback(
     async ({ cleanedText, category, subCategory }) => {
       const row = pushRow;
@@ -247,19 +273,8 @@ export default function ScheduleShow() {
 
   const columns = React.useMemo(
     () => [
-      {
-        field: "itemCode",
-        headerName: "Item Code",
-        width: 100,
-        editable: true,
-      },
-      {
-        field: "desc",
-        headerName: "Description",
-        flex: 1,
-        minWidth: 150,
-        editable: true,
-      },
+      { field: "itemCode", headerName: "Item Code", width: 100, editable: true },
+      { field: "desc", headerName: "Description", flex: 1, minWidth: 150, editable: true },
       {
         field: "spec",
         headerName: "Specification",
@@ -268,9 +283,7 @@ export default function ScheduleShow() {
         editable: true,
         renderEditCell: (params) => <MultilineEditCell {...params} />,
         renderCell: ({ value }) => (
-          <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>
-            {value}
-          </div>
+          <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>{value}</div>
         ),
       },
       { field: "supplier", headerName: "Supplier", width: 130, editable: true },
@@ -300,27 +313,29 @@ export default function ScheduleShow() {
       {
         field: "push",
         headerName: "",
-        width: 140,
+        width: 160,
         sortable: false,
         filterable: false,
-        renderCell: ({ row }) =>
-          row.derived || !row.pushed ? (
-            <Tooltip
-              title={
-                row.derived
-                  ? "Send your edits back to the org library as a new version"
-                  : "Add this new spec to the org library"
-              }
-            >
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => setPushRow(row)}
+        renderCell: ({ row }) => (
+          <Stack spacing={0.5} sx={{ py: 0.5, width: "100%" }}>
+            <Button size="small" variant="outlined" onClick={() => openOptions(row)}>
+              Options
+            </Button>
+            {(row.derived || !row.pushed) && (
+              <Tooltip
+                title={
+                  row.derived
+                    ? "Send your edits back to the org library as a new version"
+                    : "Add this new spec to the org library"
+                }
               >
-                PUSH TO ORG
-              </Button>
-            </Tooltip>
-          ) : null,
+                <Button size="small" variant="outlined" onClick={() => setPushRow(row)}>
+                  PUSH TO ORG
+                </Button>
+              </Tooltip>
+            )}
+          </Stack>
+        ),
       },
       {
         field: "actions",
@@ -332,8 +347,7 @@ export default function ScheduleShow() {
             icon={<DeleteIcon />}
             label="Delete"
             onClick={async () => {
-              if (!window.confirm("Remove this item from the schedule?"))
-                return;
+              if (!window.confirm("Remove this item from the schedule?")) return;
               try {
                 await deleteItem(row.id);
                 loadData();
@@ -365,11 +379,7 @@ export default function ScheduleShow() {
       actions={
         <Stack direction="row" spacing={1} alignItems="center">
           <Tooltip title="Create a new spec in this schedule">
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleNewSpec}
-            >
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleNewSpec}>
               New Spec
             </Button>
           </Tooltip>
@@ -405,26 +415,21 @@ export default function ScheduleShow() {
             </Typography>
           )}
           {schedule.scheduleDescription && (
-            <Typography variant="body2">
-              {schedule.scheduleDescription}
-            </Typography>
+            <Typography variant="body2">{schedule.scheduleDescription}</Typography>
           )}
           <Typography variant="caption" color="text.secondary">
-            Double-click a row to edit; click elsewhere to save. Content edits
-            are kept as new versions — history is never overwritten.
+            Double-click a row to edit; click elsewhere to save. Content edits are
+            kept as new versions — history is never overwritten.
           </Typography>
         </Box>
       )}
       <Box sx={{ mb: 1 }}>
-        {" "}
         <SpecSearch onAdd={handleAddFromLibrary} />
       </Box>
       {error ? (
         <Alert severity="error">{error.message}</Alert>
       ) : (
-        <Box
-          sx={{ width: "100%", height: "calc(100vh - 360px)", minHeight: 360 }}
-        >
+        <Box sx={{ width: "100%", height: "calc(100vh - 360px)", minHeight: 360 }}>
           <DataGrid
             rows={rows}
             columns={columns}
@@ -441,6 +446,37 @@ export default function ScheduleShow() {
           />
         </Box>
       )}
+      <SpecRowDialogs
+        mode={dialogState?.mode}
+        row={dialogState?.row}
+        onClose={() => setDialogState(null)}
+        onChanged={loadData}
+        editableOptions={dialogState?.editable ?? true}
+        context={
+          dialogState?.sourceRow
+            ? {
+                addLabel: "Add to Schedule",
+                onAdd: async (optionId) => {
+                  await addFromLibrary(scheduleId, {
+                    optionID: optionId,
+                    sortOrder: rows.length,
+                  });
+                  loadData();
+                },
+                onReplace: async (optionId) => {
+                  const src = dialogState.sourceRow;
+                  await addFromLibrary(scheduleId, {
+                    optionID: optionId,
+                    itemCode: src.itemCode || undefined,
+                    sortOrder: src.sortOrder,
+                  });
+                  await deleteItem(src.id);
+                  loadData();
+                },
+              }
+            : null
+        }
+      />
       <PushToOrgDialog
         open={Boolean(pushRow)}
         row={pushRow}

@@ -60,7 +60,8 @@ function versionToRow(version, extra = {}) {
   };
 }
 
-export default function SpecRowDialogs({ mode, row, onClose, onChanged }) {
+
+export default function SpecRowDialogs({ mode, row, onClose, onChanged, editableOptions = true, context = null }) {
   const notifications = useNotifications();
   const [rows, setRows] = React.useState(null); 
   const [optionPicker, setOptionPicker] = React.useState(null);
@@ -82,7 +83,7 @@ export default function SpecRowDialogs({ mode, row, onClose, onChanged }) {
     setRows(null);
     try {
       if (activeMode === "versions") {
-        const versions = await getVersions(row.optionId); // newest first
+        const versions = await getVersions(row.optionId); 
         setRows(versions.map((v) => versionToRow(v, { id: v._id })));
       } else if (activeMode === "options") {
         const options = await getOptions(row.id);
@@ -143,7 +144,6 @@ export default function SpecRowDialogs({ mode, row, onClose, onChanged }) {
       handleCloseRef.current?.();
     }
   }, [activeMode, activeOptionId, row, optionPicker]); 
-
   React.useEffect(() => {
     setOptionPicker(null);
   }, [mode, row]);
@@ -245,46 +245,86 @@ export default function SpecRowDialogs({ mode, row, onClose, onChanged }) {
   const optionColumns = React.useMemo(
     () => [
       { field: "label", headerName: "", width: 90 },
-      ...baseColumns(true),
+      ...baseColumns(editableOptions),
       {
         field: "buttons",
         headerName: "",
         width: 160,
         sortable: false,
         filterable: false,
-        renderCell: ({ row: optionRow }) => (
-          <Stack spacing={0.5} sx={{ py: 0.5, width: "100%" }}>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() =>
-                setOptionPicker({
-                  pickerMode: "addToSchedule",
-                  optionId: optionRow.optionId,
-                  label: optionRow.label,
-                })
-              }
-            >
-              Add to Schedule
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() =>
-                setOptionPicker({
-                  pickerMode: "addToLibrary",
-                  optionId: optionRow.optionId,
-                  label: optionRow.label,
-                })
-              }
-            >
-              Add to Library
-            </Button>
-          </Stack>
-        ),
+        renderCell: ({ row: optionRow }) =>
+          context ? (
+            <Stack spacing={0.5} sx={{ py: 0.5, width: "100%" }}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={async () => {
+                  try {
+                    await context.onAdd(optionRow.optionId);
+                    notifications.show("Added.", {
+                      severity: "success",
+                      autoHideDuration: 3000,
+                    });
+                    handleClose();
+                  } catch (err) {
+                    fail(err);
+                  }
+                }}
+              >
+                {context.addLabel}
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={async () => {
+                  try {
+                    await context.onReplace(optionRow.optionId);
+                    notifications.show("Item updated.", {
+                      severity: "success",
+                      autoHideDuration: 3000,
+                    });
+                    handleClose();
+                  } catch (err) {
+                    fail(err);
+                  }
+                }}
+              >
+                Update Item
+              </Button>
+            </Stack>
+          ) : (
+            <Stack spacing={0.5} sx={{ py: 0.5, width: "100%" }}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() =>
+                  setOptionPicker({
+                    pickerMode: "addToSchedule",
+                    optionId: optionRow.optionId,
+                    label: optionRow.label,
+                  })
+                }
+              >
+                Add to Schedule
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() =>
+                  setOptionPicker({
+                    pickerMode: "addToLibrary",
+                    optionId: optionRow.optionId,
+                    label: optionRow.label,
+                  })
+                }
+              >
+                Add to Library
+              </Button>
+            </Stack>
+          ),
       },
     ],
-    [],
+    [context, editableOptions],
   );
 
   if (!mode || !row) return null;
@@ -310,7 +350,7 @@ export default function SpecRowDialogs({ mode, row, onClose, onChanged }) {
           </Typography>
         ) : isGrid ? (
           <>
-            {activeMode === "options" && (
+            {activeMode === "options" && editableOptions && (
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -326,7 +366,7 @@ export default function SpecRowDialogs({ mode, row, onClose, onChanged }) {
                 columns={activeMode === "options" ? optionColumns : versionColumns}
                 disableRowSelectionOnClick
                 editMode="row"
-                isCellEditable={() => activeMode === "options"}
+                isCellEditable={() => activeMode === "options" && editableOptions}
                 onCellKeyDown={multilineEnterGuard(["spec"])}
                 processRowUpdate={processRowUpdate}
                 onProcessRowUpdateError={fail}
@@ -356,7 +396,7 @@ export default function SpecRowDialogs({ mode, row, onClose, onChanged }) {
         )}
       </DialogContent>
       <DialogActions>
-        {activeMode === "options" && (
+        {activeMode === "options" && editableOptions && (
           <Button startIcon={<AddIcon />} onClick={handleCreateOption}>
             Create New Option
           </Button>

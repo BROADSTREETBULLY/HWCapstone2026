@@ -132,7 +132,7 @@ export async function createOne(formValues) {
     method: "POST",
     body: {
       productName: formValues.desc,
-      rawText: formValues.spec || " ", 
+      rawText: formValues.spec || " ",
       imageKey: formValues.image || undefined,
       internalComments: formValues.comment || undefined,
     },
@@ -168,6 +168,13 @@ export async function deleteOne(specId) {
 }
 
 
+export async function getOption(optionId) {
+  return apiFetch(`/api/specs/options/${optionId}`);
+}
+
+export async function getVersion(versionId) {
+  return apiFetch(`/api/specs/versions/${versionId}`);
+}
 
 export async function getOptions(specId) {
   return apiFetch(`/api/specs/${specId}/options`);
