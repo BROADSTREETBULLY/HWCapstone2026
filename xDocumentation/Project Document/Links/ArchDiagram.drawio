@@ -1,0 +1,46 @@
+<mxfile host="Electron">
+  <diagram name="Page-1" id="IzN02YKd9AA03pur0He5">
+    <mxGraphModel dx="1084" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lhOC2VGUg0VUcD_P5BXr-1" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;align=center;fillColor=#ffe6cc;strokeColor=#d79b00;" value="&lt;b&gt;Users&lt;/b&gt;&lt;div style=&quot;line-height: 80%;&quot;&gt;&lt;font style=&quot;font-size: 6px; line-height: 80%;&quot;&gt;Building Practioners,&amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 80%;&quot;&gt;&lt;span style=&quot;font-size: 6px; background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); line-height: 80%;&quot;&gt;Architects &amp;amp; Interior Designers&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="150" x="200" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="lhOC2VGUg0VUcD_P5BXr-3" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;b&gt;React Client&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 6px; line-height: 0%;&quot;&gt;Vite + Material UI&lt;br&gt;DataGrid Interfaces&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 6px; line-height: 0%;&quot;&gt;localStorage: JWT&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="150" x="400" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="lhOC2VGUg0VUcD_P5BXr-4" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;b&gt;Express API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 6px;&quot;&gt;routes &amp;gt; controllers &amp;gt; services (MVC)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="150" x="677" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="lhOC2VGUg0VUcD_P5BXr-5" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;align=center;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;b&gt;MongoDB&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 6px;&quot;&gt;Mongoose ODM&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="150" x="677" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="lhOC2VGUg0VUcD_P5BXr-6" edge="1" parent="1" source="lhOC2VGUg0VUcD_P5BXr-1" style="endArrow=open;startArrow=open;html=1;rounded=0;startFill=0;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="lhOC2VGUg0VUcD_P5BXr-3" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="460" y="420" as="sourcePoint" />
+            <mxPoint x="510" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lhOC2VGUg0VUcD_P5BXr-8" edge="1" parent="1" source="lhOC2VGUg0VUcD_P5BXr-3" style="endArrow=open;startArrow=open;html=1;rounded=0;startFill=0;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="lhOC2VGUg0VUcD_P5BXr-4" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="450" y="650" as="sourcePoint" />
+            <mxPoint x="450" y="710" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lhOC2VGUg0VUcD_P5BXr-9" edge="1" parent="1" source="lhOC2VGUg0VUcD_P5BXr-4" style="endArrow=open;startArrow=open;html=1;rounded=0;startFill=0;endFill=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="lhOC2VGUg0VUcD_P5BXr-5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="842" y="270" as="sourcePoint" />
+            <mxPoint x="737" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lhOC2VGUg0VUcD_P5BXr-13" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;" value="&lt;font size=&quot;1&quot;&gt;Auth: POST /api/users/login issues a 1-hour JWT:&amp;nbsp; every later request carries it.&lt;/font&gt;&lt;div&gt;&lt;font size=&quot;1&quot;&gt;Org scoping is enforced server-side - the token holds only userId&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="370" x="190" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="DkbLaEsFjnENXEGXXWdC-4" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 8px;&quot;&gt;JSON / REST&amp;nbsp;&lt;/font&gt;&lt;div style=&quot;font-size: 11px;&quot;&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;Bearer JWT&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="60" x="580" y="288" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
