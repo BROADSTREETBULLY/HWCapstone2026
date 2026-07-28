@@ -27,7 +27,7 @@ Built with
 Frontend: React 19, Vite, Material UI, MUI X DataGrid, React Router
 Backend: Node.js, Express, JWT for login
 Database: MongoDB with Mongoose
-Testing: Jest and Supertest (72 tests)
+Testing: Jest and Supertest (63 tests)
 
 How the data is set up
 
