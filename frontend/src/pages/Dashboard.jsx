@@ -31,16 +31,17 @@ function Dashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      const projects = await getProjects(); 
+      const projects = await getProjects();
       const top = projects.slice(0, 4);
       setRecent(top);
       const entries = await Promise.all(
-        top.map(async (p) => [p._id, await getSchedules(p._id).catch(() => [])]),
+        top.map(async (p) => [
+          p._id,
+          await getSchedules(p._id).catch(() => []),
+        ]),
       );
       setSchedulesByProject(Object.fromEntries(entries));
-    } catch {
-      
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -66,7 +67,10 @@ function Dashboard() {
 
   return (
     <>
-      <Container maxWidth={false} sx={{ flex: 1, display: 'flex', flexDirection: 'column', mt: 2 }}>
+      <Container
+        maxWidth={false}
+        sx={{ flex: 1, display: "flex", flexDirection: "column", mt: 2 }}
+      >
         <DemoPaper square={false} sx={{ mt: 2 }}>
           <Stack
             direction="row"
@@ -75,17 +79,61 @@ function Dashboard() {
             <Button variant="contained" onClick={() => setDialogOpen(true)}>
               New Project
             </Button>
+            <Button
+              variant="contained"
+              onClick={() => navigate("/dashboard/projects-page")}
+            >
+              Projects Page
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate("/dashboard/library/furniture")}
+            >
+              Furniture Library
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate("/dashboard/library/ffe")}
+            >
+              FF&E Library
+            </Button>
+            <Button
+             variant="outlined"
+              onClick={() => navigate("/dashboard/library/finishes")}
+            >
+              Finishes Library
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate("/dashboard/libraries")}
+            >
+              My Libraries
+            </Button>
           </Stack>
         </DemoPaper>
       </Container>
-      <Container maxWidth={false} sx={{ flex: 1, display: 'flex', flexDirection: 'column', mt: 2 }}>
+      <Container
+        maxWidth={false}
+        sx={{ flex: 1, display: "flex", flexDirection: "column", mt: 2 }}
+      >
         <DemoPaper square={false} sx={{ mt: 2 }}>
           <Stack direction="column" sx={{ width: "100%" }}>
             <h2>Recent Projects</h2>
-            <Container maxWidth={false} sx={{ flex: 1, display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+            <Container
+              maxWidth={false}
+              sx={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 2,
+                mt: 2,
+              }}
+            >
               {recent.length === 0 && (
                 <Typography color="text.secondary">
-                  No projects yet — create your first one with the New Project button.
+                  No projects yet — create your first one with the New Project
+                  button.
                 </Typography>
               )}
               {recent.map((project) => (
@@ -96,11 +144,9 @@ function Dashboard() {
                 />
               ))}
             </Container>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-              <Button variant="contained" onClick={() => navigate("/dashboard/projects-page")}>
-                Projects Page
-              </Button>
-            </Box>
+            <Box
+              sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}
+            ></Box>
           </Stack>
         </DemoPaper>
       </Container>

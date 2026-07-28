@@ -15,6 +15,7 @@ import { getUser, logout, isLoggedIn } from '../data/auth';
 const NAV_ITEMS_TOP = [
   { label: 'Home', path: '/' },
   { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Projects Page', path: '/dashboard/projects-page' },
 ];
 
 const NAV_ITEMS_MAIN = [

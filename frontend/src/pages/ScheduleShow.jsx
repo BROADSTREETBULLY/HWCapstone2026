@@ -39,14 +39,15 @@ import PageContainer from "../components/PageContainer";
 import PushToOrgDialog from "../components/PushToOrgDialog";
 import { gridBorderSx, multilineEnterGuard } from "../data/taxonomy";
 
-
 function toRow(item) {
-  const option = item.optionID && typeof item.optionID === "object" ? item.optionID : null;
+  const option =
+    item.optionID && typeof item.optionID === "object" ? item.optionID : null;
   const version =
     option?.currentVersionID && typeof option.currentVersionID === "object"
       ? option.currentVersionID
       : null;
-  const spec = option?.specID && typeof option.specID === "object" ? option.specID : null;
+  const spec =
+    option?.specID && typeof option.specID === "object" ? option.specID : null;
   return {
     id: item._id,
     sortOrder: item.sortOrder ?? 0,
@@ -143,7 +144,9 @@ export default function ScheduleShow() {
 
   const handleNewSpec = async () => {
     try {
-      const minSort = rows.length ? Math.min(...rows.map((r) => r.sortOrder)) : 1;
+      const minSort = rows.length
+        ? Math.min(...rows.map((r) => r.sortOrder))
+        : 1;
       await createItem(scheduleId, {
         orgId: getUser()?.orgId,
         productName: "",
@@ -244,8 +247,19 @@ export default function ScheduleShow() {
 
   const columns = React.useMemo(
     () => [
-      { field: "itemCode", headerName: "Item Code", width: 100, editable: true },
-      { field: "desc", headerName: "Description", flex: 1, minWidth: 150, editable: true },
+      {
+        field: "itemCode",
+        headerName: "Item Code",
+        width: 100,
+        editable: true,
+      },
+      {
+        field: "desc",
+        headerName: "Description",
+        flex: 1,
+        minWidth: 150,
+        editable: true,
+      },
       {
         field: "spec",
         headerName: "Specification",
@@ -254,7 +268,9 @@ export default function ScheduleShow() {
         editable: true,
         renderEditCell: (params) => <MultilineEditCell {...params} />,
         renderCell: ({ value }) => (
-          <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>{value}</div>
+          <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>
+            {value}
+          </div>
         ),
       },
       { field: "supplier", headerName: "Supplier", width: 130, editable: true },
@@ -296,7 +312,11 @@ export default function ScheduleShow() {
                   : "Add this new spec to the org library"
               }
             >
-              <Button size="small" variant="outlined" onClick={() => setPushRow(row)}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setPushRow(row)}
+              >
                 PUSH TO ORG
               </Button>
             </Tooltip>
@@ -312,7 +332,8 @@ export default function ScheduleShow() {
             icon={<DeleteIcon />}
             label="Delete"
             onClick={async () => {
-              if (!window.confirm("Remove this item from the schedule?")) return;
+              if (!window.confirm("Remove this item from the schedule?"))
+                return;
               try {
                 await deleteItem(row.id);
                 loadData();
@@ -343,9 +364,12 @@ export default function ScheduleShow() {
       ]}
       actions={
         <Stack direction="row" spacing={1} alignItems="center">
-          <SpecSearch onAdd={handleAddFromLibrary} />
           <Tooltip title="Create a new spec in this schedule">
-            <Button variant="contained" startIcon={<AddIcon />} onClick={handleNewSpec}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleNewSpec}
+            >
               New Spec
             </Button>
           </Tooltip>
@@ -381,18 +405,26 @@ export default function ScheduleShow() {
             </Typography>
           )}
           {schedule.scheduleDescription && (
-            <Typography variant="body2">{schedule.scheduleDescription}</Typography>
+            <Typography variant="body2">
+              {schedule.scheduleDescription}
+            </Typography>
           )}
           <Typography variant="caption" color="text.secondary">
-            Double-click a row to edit; click elsewhere to save. Content edits are
-            kept as new versions — history is never overwritten.
+            Double-click a row to edit; click elsewhere to save. Content edits
+            are kept as new versions — history is never overwritten.
           </Typography>
         </Box>
       )}
+      <Box sx={{ mb: 1 }}>
+        {" "}
+        <SpecSearch onAdd={handleAddFromLibrary} />
+      </Box>
       {error ? (
         <Alert severity="error">{error.message}</Alert>
       ) : (
-        <Box sx={{ width: "100%", height: "calc(100vh - 360px)", minHeight: 360 }}>
+        <Box
+          sx={{ width: "100%", height: "calc(100vh - 360px)", minHeight: 360 }}
+        >
           <DataGrid
             rows={rows}
             columns={columns}

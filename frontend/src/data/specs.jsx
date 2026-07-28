@@ -30,7 +30,7 @@ async function enrichSpec(doc) {
     revisedOn: version?.createdAt ?? doc.updatedAt ?? null,
     code: "",
     supplier: supplierFromVersionInternal(version),
-    optionId: active?._id ?? null,
+    optionId: active?._id ?? null, 
     optionCount: options.length,
     _raw: doc,
   };
@@ -71,33 +71,46 @@ export async function queryLibrary({ paginationModel, filterModel, sortModel }) 
 export const getAll = queryLibrary;
 export const getMany = queryLibrary;
 
+
+let searchCache = { at: 0, items: [] };
+const SEARCH_CACHE_MS = 60_000;
+
 export async function searchLibrary(query) {
   if (!query) return [];
-  const data = await apiFetch("/api/specs/query", {
-    method: "POST",
-    body: {
-      paginationModel: { page: 0, pageSize: 100 },
-      filterModel: { items: [] },
-      sortModel: [],
-    },
-  });
-  const items = await enrichAll(data.items);
+  if (Date.now() - searchCache.at > SEARCH_CACHE_MS) {
+    const data = await apiFetch("/api/specs/query", {
+      method: "POST",
+      body: {
+        paginationModel: { page: 0, pageSize: 1000 },
+        filterModel: { items: [] },
+        sortModel: [],
+      },
+    });
+    searchCache = { at: Date.now(), items: await enrichAll(data.items) };
+  }
   const needle = query.toLowerCase();
-  return items
+  return searchCache.items
     .filter(
       (row) =>
         row.desc.toLowerCase().includes(needle) ||
+        row.spec.toLowerCase().includes(needle) ||
         row.category.toLowerCase().includes(needle) ||
         row.subCategory.toLowerCase().includes(needle),
     )
     .slice(0, 10);
 }
 
+export function invalidateSearchCache() {
+  searchCache = { at: 0, items: [] };
+}
+
+
 
 export async function getOne(specId) {
   const doc = await apiFetch(`/api/specs/${specId}`);
   return enrichSpec(doc);
 }
+
 
 export async function createOne(formValues) {
   const user = getUser();
@@ -110,6 +123,7 @@ export async function createOne(formValues) {
       subCategory: formValues.subCategory,
     },
   });
+  invalidateSearchCache();
   const option = await apiFetch(`/api/specs/${spec._id}/options`, {
     method: "POST",
     body: {},
@@ -149,8 +163,11 @@ export async function updateOne(specId, formValues) {
 }
 
 export async function deleteOne(specId) {
+  invalidateSearchCache();
   return apiFetch(`/api/specs/${specId}`, { method: "DELETE" });
 }
+
+
 
 export async function getOptions(specId) {
   return apiFetch(`/api/specs/${specId}/options`);
@@ -195,7 +212,6 @@ export function upsertSupplierLine(rawText, supplier) {
   if (supplier) lines.push(`Supplier: ${supplier}`);
   return lines.join("\n") || " ";
 }
-
 
 export function validate(formValues) {
   const issues = [];

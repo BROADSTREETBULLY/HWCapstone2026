@@ -130,7 +130,8 @@ export default function LibrariesPage() {
   const handleDeleteLibrary = async () => {
     const lib = libraries.find((l) => l._id === selectedId);
     if (!lib) return;
-    if (!window.confirm(`Delete library "${lib.name}" and all its items?`)) return;
+    if (!window.confirm(`Delete library "${lib.name}" and all its items?`))
+      return;
     try {
       await deleteLibrary(selectedId);
       setSelectedId("");
@@ -200,7 +201,6 @@ export default function LibrariesPage() {
     return newRow;
   }, []);
 
-
   const [dialogState, setDialogState] = React.useState(null);
 
   const [pushRow, setPushRow] = React.useState(null);
@@ -245,7 +245,13 @@ export default function LibrariesPage() {
 
   const columns = React.useMemo(
     () => [
-      { field: "desc", headerName: "Product", flex: 1, minWidth: 160, editable: true },
+      {
+        field: "desc",
+        headerName: "Product",
+        flex: 1,
+        minWidth: 160,
+        editable: true,
+      },
       {
         field: "spec",
         headerName: "Specification",
@@ -254,7 +260,9 @@ export default function LibrariesPage() {
         editable: true,
         renderEditCell: (params) => <MultilineEditCell {...params} />,
         renderCell: ({ value }) => (
-          <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>{value}</div>
+          <div style={{ whiteSpace: "pre-line", padding: "8px 0" }}>
+            {value}
+          </div>
         ),
       },
       { field: "supplier", headerName: "Supplier", width: 140, editable: true },
@@ -273,7 +281,13 @@ export default function LibrariesPage() {
             />
           ) : null,
       },
-      { field: "comment", headerName: "Comment", flex: 1, minWidth: 140, editable: true },
+      {
+        field: "comment",
+        headerName: "Comment",
+        flex: 1,
+        minWidth: 140,
+        editable: true,
+      },
       { field: "rev", headerName: "Rev", width: 60 },
       {
         field: "push",
@@ -291,7 +305,11 @@ export default function LibrariesPage() {
               Add to Schedule
             </Button>
             <Tooltip title="Send your edits back to the org library as a new version">
-              <Button size="small" variant="outlined" onClick={() => setPushRow(row)}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setPushRow(row)}
+              >
                 PUSH TO ORG
               </Button>
             </Tooltip>
@@ -335,7 +353,6 @@ export default function LibrariesPage() {
       ]}
       actions={
         <Stack direction="row" spacing={1} alignItems="center">
-          <SpecSearch onAdd={handleAddFromOrg} />
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -369,13 +386,19 @@ export default function LibrariesPage() {
         </FormControl>
         {selectedId && (
           <Tooltip title="Delete this library">
-            <Button color="error" variant="outlined" onClick={handleDeleteLibrary}>
+            <Button
+              color="error"
+              variant="outlined"
+              onClick={handleDeleteLibrary}
+            >
               <DeleteIcon fontSize="small" />
             </Button>
           </Tooltip>
         )}
       </Stack>
-
+      <Box sx={{ mb: 1 }}>
+        <SpecSearch onAdd={handleAddFromOrg} />
+      </Box>
       {libraries.length === 0 && !error ? (
         <Typography color="text.secondary">
           No libraries yet — create one, then use the search bar to add specs
@@ -393,26 +416,37 @@ export default function LibrariesPage() {
             These are your editable copies. Double-click a row to edit; edits
             save as new versions. PUSH TO ORG updates the original library spec.
           </Typography>
-          <Box sx={{ width: "100%", height: "calc(100vh - 400px)", minHeight: 360 }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            loading={isLoading}
-            disableRowSelectionOnClick
-            editMode="row"
-            onCellKeyDown={multilineEnterGuard(["spec"])}
-            processRowUpdate={processRowUpdate}
-            onProcessRowUpdateError={(err) =>
-              notifications.show(`Failed to save changes. Reason: ${err.message}`, {
-                severity: "error",
-                autoHideDuration: 5000,
-              })
-            }
-            getRowHeight={() => "auto"}
-            sx={gridBorderSx}
-            initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
-            pageSizeOptions={[25, 50, 100]}
-          />
+          <Box
+            sx={{
+              width: "100%",
+              height: "calc(100vh - 400px)",
+              minHeight: 360,
+            }}
+          >
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              loading={isLoading}
+              disableRowSelectionOnClick
+              editMode="row"
+              onCellKeyDown={multilineEnterGuard(["spec"])}
+              processRowUpdate={processRowUpdate}
+              onProcessRowUpdateError={(err) =>
+                notifications.show(
+                  `Failed to save changes. Reason: ${err.message}`,
+                  {
+                    severity: "error",
+                    autoHideDuration: 5000,
+                  },
+                )
+              }
+              getRowHeight={() => "auto"}
+              sx={gridBorderSx}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 25 } },
+              }}
+              pageSizeOptions={[25, 50, 100]}
+            />
           </Box>
         </Box>
       )}

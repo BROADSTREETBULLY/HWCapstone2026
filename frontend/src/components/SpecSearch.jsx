@@ -18,10 +18,6 @@ const Search = styled("div")(({ theme }) => ({
   },
 
   width: "100%",
-  [theme.breakpoints.up("sm")]: {
-    marginLeft: theme.spacing(1),
-    width: "auto",
-  },
 }));
 
 const SearchIconWrapper = styled("div")(({ theme }) => ({
@@ -42,10 +38,6 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create("width"),
     [theme.breakpoints.up("sm")]: {
-      width: "15ch",
-      "&:focus": {
-        width: "20ch",
-      },
     },
   },
 }));
