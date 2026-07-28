@@ -1,5 +1,12 @@
 import { apiFetch, getUser } from "./api";
 
+function supplierFromVersionInternal(version) {
+  const fromAttr = (version?.attributes ?? []).find((a) =>
+    /^supplier$/i.test(a.key ?? ""),
+  );
+  return fromAttr?.value ?? "";
+}
+
 async function enrichSpec(doc) {
   let options = [];
   try {
@@ -22,7 +29,7 @@ async function enrichSpec(doc) {
     rev: version?.versionNumber ?? "",
     revisedOn: version?.createdAt ?? doc.updatedAt ?? null,
     code: "",
-    supplier: "",
+    supplier: supplierFromVersionInternal(version),
     optionId: active?._id ?? null, 
     optionCount: options.length,
     _raw: doc,
@@ -65,27 +72,38 @@ export const getAll = queryLibrary;
 export const getMany = queryLibrary;
 
 
+let searchCache = { at: 0, items: [] };
+const SEARCH_CACHE_MS = 60_000;
+
 export async function searchLibrary(query) {
   if (!query) return [];
-  const data = await apiFetch("/api/specs/query", {
-    method: "POST",
-    body: {
-      paginationModel: { page: 0, pageSize: 100 },
-      filterModel: { items: [] },
-      sortModel: [],
-    },
-  });
-  const items = await enrichAll(data.items);
+  if (Date.now() - searchCache.at > SEARCH_CACHE_MS) {
+    const data = await apiFetch("/api/specs/query", {
+      method: "POST",
+      body: {
+        paginationModel: { page: 0, pageSize: 1000 },
+        filterModel: { items: [] },
+        sortModel: [],
+      },
+    });
+    searchCache = { at: Date.now(), items: await enrichAll(data.items) };
+  }
   const needle = query.toLowerCase();
-  return items
+  return searchCache.items
     .filter(
       (row) =>
         row.desc.toLowerCase().includes(needle) ||
+        row.spec.toLowerCase().includes(needle) ||
         row.category.toLowerCase().includes(needle) ||
         row.subCategory.toLowerCase().includes(needle),
     )
     .slice(0, 10);
 }
+
+export function invalidateSearchCache() {
+  searchCache = { at: 0, items: [] };
+}
+
 
 
 export async function getOne(specId) {
@@ -105,6 +123,7 @@ export async function createOne(formValues) {
       subCategory: formValues.subCategory,
     },
   });
+  invalidateSearchCache();
   const option = await apiFetch(`/api/specs/${spec._id}/options`, {
     method: "POST",
     body: {},
@@ -113,7 +132,7 @@ export async function createOne(formValues) {
     method: "POST",
     body: {
       productName: formValues.desc,
-      rawText: formValues.spec,
+      rawText: formValues.spec || " ",
       imageKey: formValues.image || undefined,
       internalComments: formValues.comment || undefined,
     },
@@ -135,7 +154,7 @@ export async function updateOne(specId, formValues) {
     if (active) {
       await createVersion(active._id, {
         productName: formValues.desc,
-        rawText: formValues.spec,
+        rawText: formValues.spec || " ", 
         imageKey: formValues.image || undefined,
         internalComments: formValues.comment || undefined,
       });
@@ -144,16 +163,31 @@ export async function updateOne(specId, formValues) {
 }
 
 export async function deleteOne(specId) {
+  invalidateSearchCache();
   return apiFetch(`/api/specs/${specId}`, { method: "DELETE" });
+}
+
+
+export async function getOption(optionId) {
+  return apiFetch(`/api/specs/options/${optionId}`);
+}
+
+export async function getVersion(versionId) {
+  return apiFetch(`/api/specs/versions/${versionId}`);
 }
 
 export async function getOptions(specId) {
   return apiFetch(`/api/specs/${specId}/options`);
 }
 
+export async function createOption(specId) {
+  return apiFetch(`/api/specs/${specId}/options`, { method: "POST", body: {} });
+}
+
 export async function getVersions(optionId) {
   return apiFetch(`/api/specs/options/${optionId}/versions`); 
 }
+
 
 export async function createVersion(optionId, { rawText, productName, imageKey, internalComments, attributes }) {
   return apiFetch(`/api/specs/options/${optionId}/versions`, {
@@ -162,12 +196,29 @@ export async function createVersion(optionId, { rawText, productName, imageKey, 
   });
 }
 
+
 export async function pushToLibrary(optionId) {
   return apiFetch(`/api/specs/options/${optionId}/push-to-library`, {
     method: "POST",
   });
 }
 
+
+
+export function supplierFromVersion(version) {
+  const fromAttr = (version?.attributes ?? []).find((a) =>
+    /^supplier$/i.test(a.key ?? ""),
+  );
+  return fromAttr?.value ?? "";
+}
+
+export function upsertSupplierLine(rawText, supplier) {
+  const lines = (rawText ?? "").split(/\r?\n/).filter(
+    (line) => !/^\s*supplier\s*:/i.test(line),
+  );
+  if (supplier) lines.push(`Supplier: ${supplier}`);
+  return lines.join("\n") || " ";
+}
 
 export function validate(formValues) {
   const issues = [];
@@ -178,4 +229,11 @@ export function validate(formValues) {
     issues.push({ path: ["spec"], message: "Specification text is required" });
   }
   return { issues };
+}
+
+export async function updateSpecFields(specId, { category, subCategory }) {
+  return apiFetch(`/api/specs/${specId}`, {
+    method: "PUT",
+    body: { category, subCategory },
+  });
 }

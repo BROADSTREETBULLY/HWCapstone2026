@@ -5,6 +5,8 @@ import { styled } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import LoginForm from "../components/LoginForm";
+import { Navigate } from "react-router-dom";
+import { isLoggedIn } from "../data/auth";
 
 const DemoPaper = styled(Paper)(({ theme }) => ({
   width: "100%",
@@ -14,6 +16,7 @@ const DemoPaper = styled(Paper)(({ theme }) => ({
 }));
 
 function HomePage() {
+  if (isLoggedIn()) return <Navigate to="/dashboard" replace />;
   return (
     <>
     <Container maxWidth={false} sx={{ flex: 1, display: 'flex', flexDirection: 'column', mt: 2 }}>
