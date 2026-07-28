@@ -20,6 +20,9 @@ const { pushToLibraryInDB } = require("../services/pushServices");
 
 
 
+// Controllers check the request makes sense, then hand off to the services.
+// They don't touch the database or know anything about req/res - that keeps
+// the routes thin and the services reusable.
 const createSpec = async (specBody, userId) => {
   if (!specBody || typeof specBody !== "object") {
     throw new Error("Invalid request body: missing spec data");
@@ -28,6 +31,8 @@ const createSpec = async (specBody, userId) => {
   return spec;
 };
 
+// the org library grid. Takes the pagination/filter/sort the frontend sends
+// and defaults to page 1 with 25 rows if it's missing
 const querySpecLibrary = async (queryBody, userId) => {
   const paginationModel = queryBody?.paginationModel || { page: 0, pageSize: 25 };
   const result = await getLibrary({

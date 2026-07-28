@@ -1,3 +1,6 @@
+// Lets an org decide which item-code prefix goes with which sub category,
+// e.g. "CH" for chairs. Set up for future auto-numbering of item codes.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

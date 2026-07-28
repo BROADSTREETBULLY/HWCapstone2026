@@ -1,3 +1,5 @@
+// Controllers for user libraries and their items.
+
 const {
   createLibraryInDB,
   getLibrariesInDB,

@@ -1,3 +1,5 @@
+// User libraries: personal folders of spec copies that a user can edit.
+
 const { Library, LibraryItem, SpecOption } = require("../models");
 const { cloneAsNewFamily } = require("./pushServices");
 
@@ -9,6 +11,8 @@ const httpError = (status, message) => {
 };
 
 
+// Checks the library exists AND belongs to this user. Returns 404 (not 403)
+// for someone else's library on purpose - no reason to tell them it exists.
 const getOwnedLibrary = async (libraryID, userId) => {
   const library = await Library.findById(libraryID);
   if (!library || String(library.userID) !== String(userId)) {
@@ -47,11 +51,13 @@ const updateLibraryInDB = async (libraryID, data, userId) => {
 
 const deleteLibraryInDB = async (libraryID, userId) => {
   await getOwnedLibrary(libraryID, userId);
-  await LibraryItem.deleteMany({ libraryID }); 
+  await LibraryItem.deleteMany({ libraryID }); // remove the items too, not just the library
   await Library.findByIdAndDelete(libraryID);
 };
 
 
+// Adds an org library spec to a user library. Like the schedule version, it
+// clones an editable COPY first so the user can change their copy freely.
 const addLibraryItemInDB = async (libraryID, optionID, sortOrder, userId) => {
   await getOwnedLibrary(libraryID, userId);
 

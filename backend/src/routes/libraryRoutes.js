@@ -1,3 +1,5 @@
+// All /api/libraries routes - user libraries and their items.
+
 const express = require("express");
 const router = express.Router();
 
@@ -15,6 +17,8 @@ const {
 } = require("../controllers/libraryController");
 
 
+// turns an error into the right HTTP status code, so the routes below can
+// all handle errors the same simple way
 const statusFor = (error) => {
   if (error.status) return error.status;
   if (error.message?.startsWith("Invalid request body")) return 400;
@@ -23,6 +27,8 @@ const statusFor = (error) => {
 };
 
 
+// everything on this router needs a valid login token - applying it once
+// here is safer than remembering it on every single route
 const protectedRouter = express.Router();
 protectedRouter.use(authenticateToken);
 

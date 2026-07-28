@@ -1,3 +1,5 @@
+// A contact person at a supplier. Future use, same as supplierModel.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

@@ -1,3 +1,6 @@
+// An invite for someone to join an organisation.
+// Built for future multi-user sign-up - no routes use it yet.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

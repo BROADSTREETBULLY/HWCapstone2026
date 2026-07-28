@@ -1,3 +1,6 @@
+// One place to import all the models from, so other files can do
+// const { User, Spec } = require("../models") instead of a require per model.
+
 "use strict";
 module.exports = {
   User: require("./userModel"),

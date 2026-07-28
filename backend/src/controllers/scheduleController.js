@@ -1,3 +1,5 @@
+// Controllers for schedules and the rows inside them.
+
 const {
   createScheduleInDB,
   getSchedulesInDB,

@@ -1,3 +1,6 @@
+// A schedule = one document inside a project, e.g. the Furniture Schedule.
+// scheduleType is what kind it is; the title defaults to "<type> Schedule".
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

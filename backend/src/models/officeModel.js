@@ -1,3 +1,6 @@
+// A physical office belonging to an organisation (e.g. Melbourne, Sydney).
+// Projects can optionally be linked to the office running them.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -13,6 +16,6 @@ const OfficeSchema = new Schema(
   { timestamps: true },
 );
 
-OfficeSchema.index({ orgId: 1, officeName: 1 }, { unique: true });
+OfficeSchema.index({ orgId: 1, officeName: 1 }, { unique: true }); // office names only have to be unique inside one org
 
 module.exports = mongoose.model("Office", OfficeSchema);

@@ -1,3 +1,7 @@
+// A project = one job. Schedules hang off projects.
+// Note: projectNumber is NOT unique on purpose - in real practice the same
+// number can cover several addresses/stages of the same job.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

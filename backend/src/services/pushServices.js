@@ -1,3 +1,6 @@
+// Everything to do with copying specs between the org library and schedules.
+// This is the heart of the app, so the comments here are a bit longer.
+
 const {
   Spec,
   SpecOption,
@@ -7,6 +10,8 @@ const {
 } = require("../models");
 
 
+// helper so services can throw an error that already knows which HTTP status
+// the route should send back (the route reads err.status)
 const httpError = (status, message) => {
   const err = new Error(message);
   err.status = status;
@@ -14,6 +19,9 @@ const httpError = (status, message) => {
 };
 
 
+// Makes a brand new Spec + Option + Version that is a copy of an existing one.
+// Used in both directions: library -> schedule, and schedule -> library.
+// The copy is completely separate, so editing it never touches the original.
 const cloneAsNewFamily = async ({
   srcSpec,
   srcVersion,
@@ -57,6 +65,11 @@ const cloneAsNewFamily = async ({
 };
 
 
+// PUSH TO ORG. Two different things can happen depending on the option:
+//  1. it was copied FROM the library (has derivedFromVersionID) -> send the
+//     edits back as a new version on the original, and this can be repeated
+//  2. it was created fresh in a schedule -> clone it into the library as a
+//     new spec, but only once (a second push returns 409)
 const pushToLibraryInDB = async (optionID, userId) => {
   const option = await SpecOption.findById(optionID)
     .populate("specID")
@@ -75,7 +88,7 @@ const pushToLibraryInDB = async (optionID, userId) => {
     if (!originalOption)
       throw httpError(404, "Original spec no longer exists in the library");
 
-    const latest = await SpecVersion.findOne({
+    const latest = await SpecVersion.findOne({ // find the highest version number so far
       optionID: originalOption._id,
     }).sort({ versionNumber: -1 });
 
@@ -99,6 +112,7 @@ const pushToLibraryInDB = async (optionID, userId) => {
   }
 
 
+  //case 2: brand new spec born in a schedule - clone it into the library
   if (option.specID.ownerType !== "schedule")
     throw httpError(400, "Only schedule-owned specs can be pushed to the library");
   if (option.pushedAsOptionID)
@@ -118,6 +132,9 @@ const pushToLibraryInDB = async (optionID, userId) => {
 };
 
 
+// Adds a library spec to a schedule. It does NOT point the schedule row at the
+// library spec - it clones a project-local copy first, so edits made on the
+// project can't change the org library by accident.
 const addFromLibraryInDB = async (scheduleID, optionID, itemData, userId) => {
   const schedule = await Schedule.findById(scheduleID);
   if (!schedule) throw httpError(404, "Schedule not found");
