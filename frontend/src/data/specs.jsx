@@ -156,6 +156,10 @@ export async function getOptions(specId) {
   return apiFetch(`/api/specs/${specId}/options`);
 }
 
+export async function createOption(specId) {
+  return apiFetch(`/api/specs/${specId}/options`, { method: "POST", body: {} });
+}
+
 export async function getVersions(optionId) {
   return apiFetch(`/api/specs/options/${optionId}/versions`); 
 }

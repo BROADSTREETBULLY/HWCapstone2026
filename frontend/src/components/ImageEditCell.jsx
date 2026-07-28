@@ -22,7 +22,7 @@ export default function ImageEditCell(props) {
         <img
           src={value}
           alt=""
-          style={{ maxHeight: 64, maxWidth: "100%", objectFit: "contain" }}
+          style={{ width: "100%", objectFit: "contain", display: "block" }}
           onError={(e) => (e.target.style.display = "none")}
           onLoad={(e) => (e.target.style.display = "block")}
         />
