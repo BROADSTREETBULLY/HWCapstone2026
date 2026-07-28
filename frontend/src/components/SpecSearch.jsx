@@ -9,6 +9,8 @@ import ListItemText from "@mui/material/ListItemText";
 import SearchIcon from "@mui/icons-material/Search";
 import { searchLibrary } from "../data/specs";
 
+// styled() is Material UI's way of making a component with its own CSS.
+// These three build the grey rounded search box with the icon inside it.
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
@@ -40,10 +42,15 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
+// Search box for the org library, reused on the schedule and library pages.
+// onAdd is passed in by whoever uses it, so the same box can add a spec to a
+// schedule on one page and to a user library on another.
 export default function SpecSearch({ onAdd }) {
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState([]);
 
+  // search again on every keystroke (searchLibrary caches the data so this
+  // isn't as expensive as it looks)
   const handleChange = async (e) => {
     const value = e.target.value;
     setQuery(value);
@@ -51,6 +58,7 @@ export default function SpecSearch({ onAdd }) {
     setResults(results);
   };
 
+  // clicking a result hands the spec back to the parent page and clears the box
   const handleSelect = (spec) => {
     onAdd(spec);
     setQuery("");

@@ -1,3 +1,6 @@
+// The landing page. Shows the login form, unless you're already logged in -
+// then it sends you straight to the dashboard.
+
 import { useState, useEffect } from "react";
 import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";

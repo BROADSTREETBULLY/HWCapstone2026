@@ -105,6 +105,7 @@ export default function ScheduleShow() {
     loadData();
   }, [loadData]);
 
+  // update the dropdown straight away so it feels instant, then save it
   const handleStatusChange = async (event) => {
     const scheduleStatus = event.target.value;
     setSchedule((s) => ({ ...s, scheduleStatus }));
@@ -118,6 +119,8 @@ export default function ScheduleShow() {
     }
   };
 
+  // picked something from the search box - the backend copies it into this
+  // schedule so we can edit it without touching the library
   const handleAddFromLibrary = async (spec) => {
     if (!spec.optionId) {
       notifications.show("That spec has no option to add yet.", {
@@ -144,6 +147,7 @@ export default function ScheduleShow() {
     }
   };
 
+  // blank row at the top of the schedule, ready to type into
   const handleNewSpec = async () => {
     try {
       const minSort = rows.length ? Math.min(...rows.map((r) => r.sortOrder)) : 1;

@@ -34,6 +34,8 @@ export default function CategoryLibrary() {
   const subCategories = SUBCATEGORIES[category];
   const notifications = useNotifications();
 
+  // rows = everything loaded for this category; visibleRows below is what the
+  // search box has narrowed it down to
   const [rows, setRows] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -75,6 +77,8 @@ export default function CategoryLibrary() {
     );
   }, [rows, search]);
 
+  // New Spec makes a blank row straight away - no form. You fill it in by
+  // double-clicking the row, same as a spreadsheet.
   const handleNewSpec = async () => {
     try {
       await createOne({
@@ -92,6 +96,10 @@ export default function CategoryLibrary() {
     }
   };
 
+  // Runs when you finish editing a row. Two different saves happen here:
+  //  - sub category lives on the spec, so that's a normal update
+  //  - the text/image/supplier live on the version, so those changes create a
+  //    NEW version instead of overwriting the old one
   const processRowUpdate = React.useCallback(async (newRow, oldRow) => {
     if (newRow.subCategory !== oldRow.subCategory) {
       await updateSpecFields(newRow.id, { subCategory: newRow.subCategory });

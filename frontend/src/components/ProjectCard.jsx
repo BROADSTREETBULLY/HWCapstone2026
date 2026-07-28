@@ -13,6 +13,8 @@ export const PROJECT_PLACEHOLDER =
     '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#cfd8dc"/><text x="200" y="105" font-family="sans-serif" font-size="20" fill="#607d8b" text-anchor="middle">No image</text></svg>',
   );
 
+// One project card. Used on both the dashboard and the projects page.
+// The buttons jump straight to that project's schedules.
 export default function ProjectCard({ project, schedules = [] }) {
   const navigate = useNavigate();
   if (!project) return null;

@@ -1,3 +1,5 @@
+// The bar across the top of every page. The menu icon opens the sidebar.
+
 import * as React from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";

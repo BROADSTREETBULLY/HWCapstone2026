@@ -77,6 +77,8 @@ export default function LibrariesPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [newName, setNewName] = React.useState("");
 
+  // load the user's libraries and keep whichever one was already selected
+  // (or pick the first one if nothing is selected yet)
   const loadLibraries = React.useCallback(async () => {
     setError(null);
     try {
@@ -148,6 +150,7 @@ export default function LibrariesPage() {
     }
   };
 
+  // adding from the org library gives you your own editable copy
   const handleAddFromOrg = async (spec) => {
     if (!selectedId) {
       notifications.show("Create or select a library first.", {
