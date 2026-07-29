@@ -80,6 +80,16 @@ export default function ScheduleShow() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
 
+
+  const [newIds, setNewIds] = React.useState([]);
+
+
+  const [sortModel, setSortModel] = React.useState([]);
+  const [paginationModel, setPaginationModel] = React.useState({
+    page: 0,
+    pageSize: 25,
+  });
+
   const loadData = React.useCallback(async () => {
     setError(null);
     setIsLoading(true);
@@ -102,8 +112,48 @@ export default function ScheduleShow() {
   }, [scheduleId]);
 
   React.useEffect(() => {
+    setNewIds([]);
     loadData();
   }, [loadData]);
+
+
+  const handleRefresh = () => {
+    setNewIds([]);
+    loadData();
+  };
+
+
+  const visibleRows = React.useMemo(() => {
+    const pinnedIds = new Set(newIds);
+
+
+    const pinned = newIds
+      .map((id) => rows.find((row) => row.id === id))
+      .filter(Boolean);
+
+    let rest = rows.filter((row) => !pinnedIds.has(row.id));
+
+    const sort = sortModel[0];
+    if (sort) {
+      const direction = sort.sort === "desc" ? -1 : 1;
+      rest = [...rest].sort((a, b) => {
+        if (sort.field === "revisedOn") {
+          const timeA = a.revisedOn ? new Date(a.revisedOn).getTime() : 0;
+          const timeB = b.revisedOn ? new Date(b.revisedOn).getTime() : 0;
+          return (timeA - timeB) * direction;
+        }
+        return (
+          String(a[sort.field] ?? "").localeCompare(
+            String(b[sort.field] ?? ""),
+            undefined,
+            { numeric: true },
+          ) * direction
+        );
+      });
+    }
+
+    return [...pinned, ...rest];
+  }, [rows, newIds, sortModel]);
 
   // update the dropdown straight away so it feels instant, then save it
   const handleStatusChange = async (event) => {
@@ -151,12 +201,15 @@ export default function ScheduleShow() {
   const handleNewSpec = async () => {
     try {
       const minSort = rows.length ? Math.min(...rows.map((r) => r.sortOrder)) : 1;
-      await createItem(scheduleId, {
+      const created = await createItem(scheduleId, {
         orgId: getUser()?.orgId,
         productName: "",
         rawText: " ",
         sortOrder: minSort - 1, 
       });
+      const newId = created?._id ?? created?.id ?? null;
+      if (newId) setNewIds((ids) => [newId, ...ids]);
+      setPaginationModel((model) => ({ ...model, page: 0 }));
       loadData();
     } catch (err) {
       notifications.show(`Failed to create spec. Reason: ${err.message}`, {
@@ -388,7 +441,7 @@ export default function ScheduleShow() {
             </Button>
           </Tooltip>
           <Tooltip title="Reload">
-            <Button variant="outlined" onClick={loadData}>
+            <Button variant="outlined" onClick={handleRefresh}>
               <RefreshIcon fontSize="small" />
             </Button>
           </Tooltip>
@@ -435,7 +488,7 @@ export default function ScheduleShow() {
       ) : (
         <Box sx={{ width: "100%", height: "calc(100vh - 360px)", minHeight: 360 }}>
           <DataGrid
-            rows={rows}
+            rows={visibleRows}
             columns={columns}
             loading={isLoading}
             disableRowSelectionOnClick
@@ -445,7 +498,11 @@ export default function ScheduleShow() {
             onProcessRowUpdateError={handleProcessRowUpdateError}
             getRowHeight={() => "auto"}
             sx={gridBorderSx}
-            initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
+            sortingMode="server"
+            sortModel={sortModel}
+            onSortModelChange={setSortModel}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[25, 50, 100]}
           />
         </Box>
