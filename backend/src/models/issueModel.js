@@ -1,3 +1,8 @@
+// An issue = a schedule formally sent out (issued) at a point in time.
+// The rows are COPIED into the issue as plain text so an old issue always
+// shows exactly what was sent, even if the specs change afterwards.
+// Modelled for the next stage of the project - no routes use it yet.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

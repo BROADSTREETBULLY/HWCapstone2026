@@ -1,3 +1,5 @@
+// Links a user to a project they work on. Built for future multi-user
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

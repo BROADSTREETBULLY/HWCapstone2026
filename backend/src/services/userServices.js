@@ -1,16 +1,19 @@
 const { User } = require("../models");
 const bcrypt = require("bcryptjs");
 
+//used at register so two accounts can't share an email
 const checkUserExists = async (email) => {
   const user = await User.findOne({ email });
   return !!user;
 };
 
+//same idea for usernames
 const checkUsernameExists = async (username) => {
   const user = await User.findOne({ username });
   return !!user;
 };
 
+//create a new user - the password arrives already hashed from the controller
 const registerUserInDB = async (userData) => {
   const userExists = await checkUserExists(userData.email);
   const usernameExists = await checkUsernameExists(userData.username);
@@ -24,8 +27,9 @@ const registerUserInDB = async (userData) => {
   return user;
 };
 
+//list all users (admin/testing helper)
 const displayUsersInDB = async () => {
-  const users = await User.find();
+  const users = await User.find().select("-password");
   return users;
 };
 

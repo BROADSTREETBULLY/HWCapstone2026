@@ -1,3 +1,5 @@
+// The slide-out menu. Also shows who's logged in and the logout button.
+
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -18,6 +20,7 @@ const NAV_ITEMS_TOP = [
   { label: 'Projects Page', path: '/dashboard/projects-page' },
 ];
 
+// the main sections - the three libraries are separate pages
 const NAV_ITEMS_MAIN = [
   { label: 'Furniture Library', path: '/dashboard/library/furniture' },
   { label: 'FF&E Library', path: '/dashboard/library/ffe' },

@@ -1,3 +1,5 @@
+// Controllers for projects.
+
 const {
   createProjectInDB,
   getProjectsInDB,

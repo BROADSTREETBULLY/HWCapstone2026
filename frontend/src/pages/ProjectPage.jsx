@@ -40,6 +40,8 @@ export default function ProjectPage() {
   const [scheduleType, setScheduleType] = React.useState("");
   const [scheduleTitle, setScheduleTitle] = React.useState("");
 
+  // Promise.all so the project and its schedules load at the same time
+  // instead of waiting for one then the other
   const loadData = React.useCallback(async () => {
     try {
       const [projectData, scheduleData] = await Promise.all([
@@ -77,6 +79,7 @@ export default function ProjectPage() {
     }
   };
 
+  // we already know the project from the URL, so the user only picks the type
   const handleCreateSchedule = async () => {
     if (!scheduleType.trim()) return;
     try {

@@ -29,6 +29,8 @@ function Dashboard() {
   const [schedulesByProject, setSchedulesByProject] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // projects come back newest-updated first, so the first four are the recent
+  // ones. Then fetch each one's schedules for the buttons on the cards.
   const loadData = useCallback(async () => {
     try {
       const projects = await getProjects();

@@ -14,6 +14,7 @@ function LoginForm() {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // login() saves the token; if it throws, show the message instead of crashing
   const handleSubmit = async () => {
     setError(null);
     setIsSubmitting(true);

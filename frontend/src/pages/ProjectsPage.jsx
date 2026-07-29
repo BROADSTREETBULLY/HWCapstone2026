@@ -21,6 +21,7 @@ export default function ProjectsPage() {
   const [schedulesByProject, setSchedulesByProject] = React.useState({});
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
+  // every project in the org, plus each one's schedules for the card buttons
   const loadData = React.useCallback(async () => {
     try {
       const data = await getProjects();

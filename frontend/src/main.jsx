@@ -1,3 +1,10 @@
+// Where the whole React app starts.
+// The <App /> is wrapped in providers so anything inside it can use them:
+//   AppTheme     - Material UI colours/dark mode
+//   BrowserRouter- page URLs
+//   Notifications- the little pop-up messages
+//   Dialogs      - shared confirm dialogs
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

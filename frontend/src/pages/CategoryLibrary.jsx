@@ -34,11 +34,28 @@ export default function CategoryLibrary() {
   const subCategories = SUBCATEGORIES[category];
   const notifications = useNotifications();
 
+  // rows = everything loaded for this category; visibleRows below is what the
+  // search box has narrowed it down to
   const [rows, setRows] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
   const [search, setSearch] = React.useState("");
   const [dialogState, setDialogState] = React.useState(null);
+
+  // ids of specs made with New Spec on this page. They get pinned to the top of
+  // the grid until you hit Refresh or leave the page - a new row is blank, so
+  // any search or any sort would otherwise drop it somewhere you can't find it.
+  const [newIds, setNewIds] = React.useState([]);
+
+  // sorting and paging are held here instead of inside the grid, so the pinned
+  // rows can be put in front after the sort has been applied
+  const [sortModel, setSortModel] = React.useState([
+    { field: "subCategory", sort: "asc" },
+  ]);
+  const [paginationModel, setPaginationModel] = React.useState({
+    page: 0,
+    pageSize: 25,
+  });
 
   const loadData = React.useCallback(async () => {
     setError(null);
@@ -60,29 +77,69 @@ export default function CategoryLibrary() {
 
   React.useEffect(() => {
     setSearch("");
+    setNewIds([]);
     loadData();
   }, [loadData]);
 
 
+  // Refresh also lets go of the pinned rows, so they drop back into normal
+  // order once you've finished filling them in.
+  const handleRefresh = () => {
+    setNewIds([]);
+    loadData();
+  };
+
+
   const visibleRows = React.useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) return rows;
-    return rows.filter((row) =>
-      [row.desc, row.spec, row.supplier, row.subCategory]
-        .join(" ")
-        .toLowerCase()
-        .includes(needle),
-    );
-  }, [rows, search]);
+    const pinnedIds = new Set(newIds);
 
+    // newest first, and skipping the search box entirely
+    const pinned = newIds
+      .map((id) => rows.find((row) => row.id === id))
+      .filter(Boolean);
+
+    let rest = rows.filter((row) => !pinnedIds.has(row.id));
+
+    if (needle) {
+      rest = rest.filter((row) =>
+        [row.desc, row.spec, row.supplier, row.subCategory]
+          .join(" ")
+          .toLowerCase()
+          .includes(needle),
+      );
+    }
+
+    // the grid is told not to sort (sortingMode="server"), so the sort happens
+    // here on everything except the pinned rows
+    const sort = sortModel[0];
+    if (sort) {
+      const direction = sort.sort === "desc" ? -1 : 1;
+      rest = [...rest].sort(
+        (a, b) =>
+          String(a[sort.field] ?? "").localeCompare(
+            String(b[sort.field] ?? ""),
+            undefined,
+            { numeric: true },
+          ) * direction,
+      );
+    }
+
+    return [...pinned, ...rest];
+  }, [rows, search, newIds, sortModel]);
+
+  // New Spec makes a blank row straight away - no form. You fill it in by
+  // double-clicking the row, same as a spreadsheet.
   const handleNewSpec = async () => {
     try {
-      await createOne({
+      const spec = await createOne({
         category,
         subCategory: "Misc",
         desc: "",
         spec: "",
       });
+      setNewIds((ids) => [spec._id, ...ids]);
+      setPaginationModel((model) => ({ ...model, page: 0 }));
       loadData();
     } catch (err) {
       notifications.show(`Failed to create spec. Reason: ${err.message}`, {
@@ -92,6 +149,10 @@ export default function CategoryLibrary() {
     }
   };
 
+  // Runs when you finish editing a row. Two different saves happen here:
+  //  - sub category lives on the spec, so that's a normal update
+  //  - the text/image/supplier live on the version, so those changes create a
+  //    NEW version instead of overwriting the old one
   const processRowUpdate = React.useCallback(async (newRow, oldRow) => {
     if (newRow.subCategory !== oldRow.subCategory) {
       await updateSpecFields(newRow.id, { subCategory: newRow.subCategory });
@@ -244,7 +305,7 @@ export default function CategoryLibrary() {
             </Button>
           </Tooltip>
           <Tooltip title="Reload">
-            <Button variant="outlined" onClick={loadData}>
+            <Button variant="outlined" onClick={handleRefresh}>
               <RefreshIcon fontSize="small" />
             </Button>
           </Tooltip>
@@ -292,7 +353,11 @@ export default function CategoryLibrary() {
             }
             getRowHeight={() => "auto"}
             sx={gridBorderSx}
-            initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
+            sortingMode="server"
+            sortModel={sortModel}
+            onSortModelChange={setSortModel}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[25, 50, 100]}
           />
         </Box>

@@ -1,3 +1,5 @@
+// Basic CRUD for schedules.
+
 const { Schedule } = require("../models");
 
 const createScheduleInDB = async (data, userId) => {
@@ -5,7 +7,7 @@ const createScheduleInDB = async (data, userId) => {
     projectID: data.projectID,
     scheduleType: data.scheduleType,
     scheduleTitle:
-      data.scheduleTitle || `${data.scheduleType} Schedule`, 
+      data.scheduleTitle || `${data.scheduleType} Schedule`, // auto title if none given
     scheduleStatus: data.scheduleStatus,
     scheduleDescription: data.scheduleDescription,
     scheduleComments: data.scheduleComments,
@@ -14,6 +16,8 @@ const createScheduleInDB = async (data, userId) => {
   return schedule;
 };
 
+// with a projectID = that project's schedules, without = all of them
+// (the search bar uses the no-projectID version)
 const getSchedulesInDB = async (projectID) => {
   const query = projectID ? { projectID } : {};
   const schedules = await Schedule.find(query).sort({ createdAt: -1 });

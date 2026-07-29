@@ -1,3 +1,5 @@
+// All /api/users routes - register and login.
+
 const express = require("express");
 const router = express.Router();
 
@@ -9,9 +11,10 @@ const {
   displayUsers,
 } = require("../controllers/userAuthController");
 
+// register and login are the only routes that DON'T need a token -
+// you can't send a token before you have one
 router.post("/register", async (req, res) => {
   try {
-    console.log("Received registration request with body:", req.body);
     const user = await registerUser(req.body);
     if (!user) {
       return res.status(404).send("User existed");
@@ -40,6 +43,8 @@ router.post("/login", async (req, res) => {
 });
 
 //HERE FOR TESTNG PURPOSES ONLY, SHOULD BE PROTECTED IN PRODUCTION
+// everything on this router needs a valid login token - applying it once
+// here is safer than remembering it on every single route
 const protectedRouter = express.Router();
 protectedRouter.use(authenticateToken);
 

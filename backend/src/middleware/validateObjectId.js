@@ -1,6 +1,8 @@
 //validates that any :id style params are real Mongo ObjectIds before hitting controllers
 const mongoose = require("mongoose");
 
+// pass in the param names to check, e.g. validateObjectId("id")
+// a bad id gets a clear 400 here instead of a confusing 500 from Mongoose
 const validateObjectId = (...paramNames) => {
   return (req, res, next) => {
     for (const name of paramNames) {

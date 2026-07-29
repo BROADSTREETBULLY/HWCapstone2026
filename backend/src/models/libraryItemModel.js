@@ -1,3 +1,7 @@
+// One spec sitting inside a user library. Points at an option, same as a
+// schedule row does. The option it points at is an editable COPY, so editing
+// it never changes the org library original.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

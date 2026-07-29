@@ -1,3 +1,9 @@
+// An option = one variant of a spec (e.g. the same chair in a different
+// colour). currentVersionID is the pointer that says which version is live.
+// The two "breadcrumb" fields are what make push-to-library work:
+//   derivedFromVersionID = the org version this copy came FROM
+//   pushedAsOptionID     = the org option this copy was pushed TO
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

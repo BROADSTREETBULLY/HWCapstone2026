@@ -1,3 +1,6 @@
+// The file that actually starts the server for normal use (npm start).
+// index.js = app + app.listen(). Tests use app.js instead.
+
 const express = require("express");
 require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") });
 

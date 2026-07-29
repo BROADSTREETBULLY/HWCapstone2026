@@ -1,3 +1,7 @@
+// One row in a schedule.
+// Important: it points at an OPTION, not a version. That way the row always
+// shows the option's current text, so edits show up without touching the row.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

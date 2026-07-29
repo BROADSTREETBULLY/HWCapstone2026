@@ -1,3 +1,6 @@
+// A user of the app. Every user belongs to one organisation (their practice),
+// which is how the API works out what data they are allowed to see.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

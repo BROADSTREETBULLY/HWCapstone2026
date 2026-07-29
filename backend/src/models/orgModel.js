@@ -1,3 +1,7 @@
+// An organisation = one design practice. Everything in the app (projects,
+// specs, libraries) belongs to an org so practices never see each other's data.
+// The billing/subscription fields are here for future use - not used yet.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

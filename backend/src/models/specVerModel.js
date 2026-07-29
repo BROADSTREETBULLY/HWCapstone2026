@@ -1,3 +1,9 @@
+// A version = a frozen snapshot of what a product actually is.
+// Versions are never edited or deleted - editing creates a NEW version and
+// the option's currentVersionID pointer moves to it, so we keep full history.
+// rawText is what the user typed; attributes is that same text auto-split
+// into key/value pairs by specTextParser.js.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 

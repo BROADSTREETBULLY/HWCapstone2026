@@ -1,3 +1,5 @@
+// Schedule items are the rows inside a schedule.
+
 const {
   ScheduleItem,
   Schedule,
@@ -8,6 +10,10 @@ const {
 
 const { parseSpecText } = require("./specTextParser");
 
+// The "New Spec" button. Makes the whole chain in one go:
+// Spec -> Option -> Version -> the schedule row that points at the option.
+// The spec is ownerType "schedule", so it belongs to this project only until
+// someone pushes it to the org library.
 const createItemWithSpecInDB = async (scheduleID, data, userId) => {
   const schedule = await Schedule.findById(scheduleID);
   if (!schedule) throw new Error("Schedule not found");
@@ -53,6 +59,8 @@ const createItemWithSpecInDB = async (scheduleID, data, userId) => {
   return { item, spec, option, version };
 };
 
+// all rows in a schedule. populate() pulls in the option, its current version
+// and its spec, so the frontend gets the text/image in one request
 const getItemsForScheduleInDB = async (scheduleID) => {
   const items = await ScheduleItem.find({ scheduleID })
     .populate({
@@ -72,6 +80,8 @@ const getItemInDB = async (itemID) => {
   return item;
 };
 
+// Only these three fields can be changed on a row - the spec text is NOT one
+// of them, because changing text means adding a new version instead.
 const updateItemInDB = async (itemID, data, userId) => {
   const allowed = {
     updatedBy: userId,

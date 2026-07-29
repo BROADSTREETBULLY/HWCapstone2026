@@ -20,6 +20,8 @@ export default function ProjectFormDialog({ open, onClose, onSave, initialValues
   const [values, setValues] = React.useState(EMPTY);
   const [isSaving, setIsSaving] = React.useState(false);
 
+  // refill the boxes each time the dialog opens - with the project's details
+  // when editing, or blank when creating
   React.useEffect(() => {
     if (open) setValues({ ...EMPTY, ...(initialValues ?? {}) });
   }, [open, initialValues]);

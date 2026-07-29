@@ -1,3 +1,7 @@
+// A spec = a product family (e.g. "Meeting Chair"). It holds the filing info
+// only - the actual product text lives on SpecVersion further down the chain.
+// Chain: Spec -> SpecOption -> SpecVersion
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -21,7 +25,7 @@ const SpecSchema = new Schema(
     subCategory: { type: String, trim: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
-    libraryID: {
+    libraryID: { // set when the spec belongs to a user library
       type: Schema.Types.ObjectId,
       ref: "Library", 
     },

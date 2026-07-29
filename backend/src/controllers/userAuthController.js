@@ -1,3 +1,5 @@
+// Controllers for registering and logging in.
+
 //create controllers registering users and login
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");

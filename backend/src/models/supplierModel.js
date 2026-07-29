@@ -1,3 +1,6 @@
+// A supplier company. Set up for future use - at the moment the supplier is
+// just typed into the spec text as a "Supplier: X" line instead.
+
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
