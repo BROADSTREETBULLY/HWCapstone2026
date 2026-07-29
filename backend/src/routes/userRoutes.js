@@ -15,7 +15,6 @@ const {
 // you can't send a token before you have one
 router.post("/register", async (req, res) => {
   try {
-    console.log("Received registration request with body:", req.body);
     const user = await registerUser(req.body);
     if (!user) {
       return res.status(404).send("User existed");

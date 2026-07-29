@@ -44,7 +44,7 @@ You need Node.js 18 or newer, and MongoDB running on your machine.
 Setting it up
 1. Backend
 
-cd <backend folder>
+cd backend
 npm install
 
 Make a file called .env in the backend folder with:
@@ -54,7 +54,10 @@ JWT_SECRET=<any long random string>
 
 DB_URI is optional, that one is the default.
 
-In MongoDB Compass, add one Organisation document and copy down its _id. 
+Open MongoDB Compass and connect to mongodb://localhost. 
+Make a database called Capstone26 with a collection called organisations. 
+Insert one document into it, { "orgName": "Test Practice" } is enough, and copy down its _id. 
+That _id is the orgId you use when you register a user further down. 
 Organisations are practice level admin so there are no routes for them on purpose. 
 Everything else (projects, schedules, specs, libraries) gets made in the app.
 
@@ -66,7 +69,7 @@ or `npm run dev` if you want nodemon. It runs on http://localhost:3000/api
 
 2. Frontend
 
-cd <frontend folder>
+cd frontend
 npm install
 npm run dev
 
@@ -98,7 +101,9 @@ My Libraries - your own collections. Same editing and options, and you can push 
 
 Testing
 
-cd <backend folder>
+cd backend
 npm test
 
-63 Jest tests covering login, projects, schedules, schedule items, specs, options, versions, user libraries and the push to library flows.
+63 Jest tests covering login, schedules, schedule items, specs, options, versions, 
+user libraries and the push to library flows. 
+The project routes are not in the automated tests, those were tested by hand.

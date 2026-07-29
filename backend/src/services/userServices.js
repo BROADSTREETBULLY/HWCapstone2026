@@ -13,7 +13,7 @@ const checkUsernameExists = async (username) => {
   return !!user;
 };
 
-//create a new user - the password is hashed by the User model before saving
+//create a new user - the password arrives already hashed from the controller
 const registerUserInDB = async (userData) => {
   const userExists = await checkUserExists(userData.email);
   const usernameExists = await checkUsernameExists(userData.username);
@@ -29,7 +29,7 @@ const registerUserInDB = async (userData) => {
 
 //list all users (admin/testing helper)
 const displayUsersInDB = async () => {
-  const users = await User.find();
+  const users = await User.find().select("-password");
   return users;
 };
 
